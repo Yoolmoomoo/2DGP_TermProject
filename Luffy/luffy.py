@@ -2,12 +2,15 @@ from pico2d import *
 from speed_definition import *
 import state_machine
 import game_framework
-from state_machine import StateMachine
+from state_machine import StateMachine, left_up
+
 
 class Luffy:
   def __init__(self):
     self.x, self.y = 400, 114
+    self.action = 1
     self.face_dir = 1
+    self.dir = 0
     self.attack_flag = False
     self.image_idle = load_image('./res/luffy/luffy_idle.png')
     self.image_run = load_image('./res/luffy/luffy_run.png')
@@ -21,8 +24,8 @@ class Luffy:
       {
         Idle : {state_machine.right_down : Run,
                 state_machine.left_down : Run,
-                state_machine.right_up : Run,
-                state_machine.left_up : Run,
+                # state_machine.right_up : Run,
+                # state_machine.left_up : Run,
                 state_machine.c_down : StartAttack,
                 state_machine.space_down : Jump,
                },
@@ -32,15 +35,18 @@ class Luffy:
                 state_machine.left_up : Idle,
                state_machine.c_down: StartAttack,
                state_machine.space_down: Jump,
+               state_machine.frame_done: Idle,
               },
         StartAttack: {state_machine.frame_done: MainAttack},
         MainAttack: {state_machine.time_out: FinishAttack,
                     },
-        FinishAttack: {state_machine.right_down: Run,
-                       state_machine.left_down: Run,
+        FinishAttack: {state_machine.right_down: Idle,
+                       state_machine.left_down: Idle,
+                       state_machine.right_up: Idle,
+                       state_machine.left_up: Idle,
                        state_machine.frame_done: Idle},
         Jump: {state_machine.frame_done: Idle,
-               }
+              },
       }
     )
   def update(self):
@@ -123,7 +129,7 @@ class StartAttack:
 
   @staticmethod
   def do(luffy):
-    luffy.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
+    luffy.frame += (FRAMES_PER_ACTION_SA * ACTION_PER_TIME * game_framework.frame_time)
     if luffy.frame >= 2:  # 2프레임이 지나면 MainAttack으로 전환
       # luffy.state_machine.cur_state = MainAttack
       luffy.state_machine.add_event(('FRAME_DONE', 0))
@@ -149,7 +155,7 @@ class MainAttack:
 
   @staticmethod
   def do(luffy):
-    luffy.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time*3
+    luffy.frame += (FRAMES_PER_ACTION_MA * ACTION_PER_TIME * game_framework.frame_time)
     if luffy.frame >= 4:  # 4프레임이 지나면 초기화
       luffy.frame = 0
     if get_time()-luffy.attack_time > 1.0:
@@ -177,7 +183,7 @@ class FinishAttack:
 
   @staticmethod
   def do(luffy):
-    luffy.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
+    luffy.frame += (FRAMES_PER_ACTION_SA * ACTION_PER_TIME * game_framework.frame_time)
     if luffy.frame >= 4:  # 4프레임이 지나면 Idle 상태로 전환
       # luffy.state_machine.cur_state = Idle
       luffy.state_machine.add_event(('FRAME_DONE', 0))
@@ -194,6 +200,7 @@ class FinishAttack:
 class Jump:
   @staticmethod
   def enter(luffy, e):
+    luffy.dir = 0
     luffy.frame = 0
     luffy.dy = 1
 
@@ -203,23 +210,14 @@ class Jump:
 
   @staticmethod
   def do(luffy):
-    luffy.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
-
-    events = get_events()
-    for e in events:
-      if e == SDL_KEYDOWN and e == SDLK_RIGHT:
-        luffy.face_dir = 1
-        luffy.dir = 1
-        luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
-      if e == SDL_KEYDOWN and e == SDLK_LEFT:
-        luffy.face_dir = -1
-        luffy.dir = -1
-        luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
+    luffy.frame += (FRAMES_PER_ACTION_JUMP * ACTION_PER_TIME * game_framework.frame_time)
+    if luffy.frame >= 5: luffy.frame = 5
 
     if luffy.y >= 270:
       luffy.dy = -1
 
-    luffy.y += luffy.dy * RUN_SPEED_PPS * game_framework.frame_time*1.28
+    luffy.y += luffy.dy * RUN_SPEED_PPS * game_framework.frame_time*1.1
+    luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 
     if luffy.y <= 114:
       luffy.y = 114
@@ -229,7 +227,7 @@ class Jump:
   def draw(luffy):
     if luffy.face_dir == 1:
       luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                                      luffy.x, luffy.y, 117, 117)
+                                                      luffy.x, luffy.y, 120, 120)
     else:
       luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                                      luffy.x, luffy.y, 117, 117)
+                                                      luffy.x, luffy.y, 120, 120)
