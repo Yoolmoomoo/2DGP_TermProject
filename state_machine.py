@@ -5,6 +5,8 @@ def start_event(e):
   return e[0] == 'START'
 def time_out(e):
   return e[0] == 'TIME_OUT'
+def frame_done(e):
+  return e[0] == 'FRAME_DONE'
 ################################# KEYBOARD : ARROW #################################
 def right_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
@@ -39,7 +41,7 @@ class StateMachine:
     self.cur_state.enter(self.o, ('START',0))
 
   def add_event(self, e):
-    print(f'    DEBUG: New event {e} added to event Queue at StateMachine')
+    # print(f'    DEBUG: New event {e} added to event Queue at StateMachine')
     self.event_q.append(e)
 
   def set_transitions(self, transitions):
@@ -63,4 +65,4 @@ class StateMachine:
         print(f'Enter into {self.cur_state}')
         self.cur_state.enter(self.o, e)
         return
-    print(f'    Warning: Event [{e}] at State [{self.cur_state}] not handled')
+    # print(f'    Warning: Event [{e}] at State [{self.cur_state}] not handled')
