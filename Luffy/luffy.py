@@ -6,7 +6,7 @@ from state_machine import StateMachine
 
 class Luffy:
   def __init__(self):
-    self.x, self.y = 400, 90
+    self.x, self.y = 400, 114
     self.face_dir = 1
     self.image_idle = load_image('./res/luffy/luffy_idle.png')
     self.state_machine = StateMachine(self)
@@ -26,7 +26,7 @@ class Luffy:
   def draw(self):
     self.state_machine.draw()
     # Collision box
-    draw_rectangle(*self.get_bb())
+    # draw_rectangle(*self.get_bb())
   def get_bb(self):
     # xld, yld, xru, yru
     return self.x-20, self.y-50, self.x+20, self.y+50
@@ -50,10 +50,11 @@ class Idle:
     pass
   @staticmethod
   def do(luffy):
-    luffy.frame = (luffy.frame + FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time) % 4
+    luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
   @staticmethod
   def draw(luffy):
-    luffy.image_idle.clip_draw(int(luffy.frame)*100, 0, 100, 100, luffy.x, luffy.y)
+    luffy.image_idle.clip_composite_draw(int(luffy.frame)*100, 0, 100, 180,
+                                         0, '', luffy.x, luffy.y, 100, 100)
 
 class Run:
   @staticmethod
