@@ -39,9 +39,29 @@ class StateMachine:
     self.cur_state.enter(self.o, ('START',0))
 
   def add_event(self, e):
-    print(f'   DEBUG: New event {e} added to event Queue at StateMachine')
+    print(f'    DEBUG: New event {e} added to event Queue at StateMachine')
     self.event_q.append(e)
 
   def set_transitions(self, transitions):
     self.transitions = transitions
 
+  def update(self):
+    self.cur_state.do(self.o)
+    if self.event_q:
+      event = self.event_q.pop(0)
+      self.handle_event(event)
+
+  def draw(self):
+    self.cur_state.draw(self.o)
+
+  def handle_event(self, e):
+    for event, next_state in self.transitions[self.cur_state].items():
+      if event(e):
+        print(f'Exit from {self.cur_state}')
+        self.cur_state.exit(self.o, e)
+        self.cur_state = next_state
+        print(f'Enter into {self.cur_state}')
+        self.cur_state.enter(self.o, e)
+        return
+    print(f'    Warning: Event [{e}] at State [{self.cur_state}] not handled')
+    
