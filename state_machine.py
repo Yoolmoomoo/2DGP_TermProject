@@ -26,3 +26,22 @@ def c_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_c
 def c_up(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_c
+
+
+class StateMachine:
+  def __init__(self, o):
+    self.o = o
+    self.event_q = []
+
+  def start(self, state):
+    self.cur_state = state
+    print(f'Enter into {state}')
+    self.cur_state.enter(self.o, ('START',0))
+
+  def add_event(self, e):
+    print(f'   DEBUG: New event {e} added to event Queue at StateMachine')
+    self.event_q.append(e)
+
+  def set_transitions(self, transitions):
+    self.transitions = transitions
+
