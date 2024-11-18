@@ -1,4 +1,4 @@
-from unittest.mock import right
+# from unittest.mock import right
 
 from pico2d import *
 from speed_definition import *
@@ -12,6 +12,7 @@ class Luffy:
     self.x, self.y = 400, 114
     self.action = 1
     self.face_dir = 1
+    self.combo_flag = False
     self.dir = 0
     self.key_states = {SDLK_RIGHT:False, SDLK_LEFT:False}
     self.attack_flag = False
@@ -20,6 +21,7 @@ class Luffy:
     self.image_c_attack_start = load_image('./res/luffy/luffy_c_attack_start.png')
     self.image_c_attack = load_image('./res/luffy/luffy_c_attack.png')
     self.image_c_attack_finish = load_image('./res/luffy/luffy_c_attack_finish.png')
+    self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
     self.image_jump = load_image('./res/luffy/luffy_jump.png')
     self.state_machine = StateMachine(self)
     self.state_machine.start(Idle)
@@ -30,6 +32,7 @@ class Luffy:
                 state_machine.right_up : Run,
                 state_machine.left_up : Run,
                 state_machine.c_down : StartAttack,
+                state_machine.x_down: ComboAttack1,
                 state_machine.space_down : Jump,
                 state_machine.right_held: Run,
                 state_machine.left_held: Run,
@@ -40,6 +43,7 @@ class Luffy:
                 state_machine.right_up : Idle,
                 state_machine.left_up : Idle,
                state_machine.c_down: StartAttack,
+               state_machine.x_down: ComboAttack1,
                state_machine.space_down: Jump,
                state_machine.frame_done: Idle,
                state_machine.both_held: Idle
@@ -52,8 +56,12 @@ class Luffy:
                        state_machine.right_up: Idle,
                        state_machine.left_up: Idle,
                        state_machine.frame_done: Idle},
-        Jump: {state_machine.landed: Idle,
-              },
+        ComboAttack1: {state_machine.frame_done: Idle,
+                       state_machine.next_combo: ComboAttack2},
+        ComboAttack2: {state_machine.frame_done: Idle,
+                       state_machine.next_combo: ComboAttack3},
+        ComboAttack3: {state_machine.frame_done: Idle},
+        Jump: {state_machine.landed: Idle},
       }
     )
   def update(self):
@@ -63,6 +71,11 @@ class Luffy:
       self.key_states[event.key] = True
     elif event.type == SDL_KEYUP and event.key in [SDLK_RIGHT, SDLK_LEFT]:
       self.key_states[event.key] = False
+    elif self.state_flag == 'ComboAttack1' and event.type == SDL_KEYDOWN and event.key is SDLK_x:
+      self.combo_flag = True
+    elif self.state_flag == 'ComboAttack2' and event.type == SDL_KEYDOWN and event.key is SDLK_x:
+      self.combo_flag = True
+
     self.state_machine.add_event(('INPUT', event))
 
   def draw(self):
@@ -89,6 +102,13 @@ class Luffy:
                 (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'Jump':
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state_flag == 'ComboAttack1':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state_flag == 'ComboAttack2':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state_flag == 'ComboAttack3':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+
 
   def handle_collision(self, group, other):
     if group == 'luffy:map':
@@ -225,10 +245,10 @@ class MainAttack:
   def draw(luffy):
     if luffy.face_dir == 1:
       luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                               luffy.x+50, luffy.y+12, 200, 120)
+                                               luffy.x+50, luffy.y+12, 180, 120)
     else:
       luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                               luffy.x-50, luffy.y+12, 200, 120)
+                                               luffy.x-50, luffy.y+12, 180, 120)
 
 class FinishAttack:
   @staticmethod
@@ -256,6 +276,96 @@ class FinishAttack:
     else:
       luffy.image_c_attack_finish.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
                                                       luffy.x, luffy.y, 150, 150)
+
+class ComboAttack1:
+  @staticmethod
+  def enter(luffy, e):
+    luffy.state_flag = 'ComboAttack1'
+    luffy.attack_time = get_time()
+
+  @staticmethod
+  def exit(luffy, e):
+    luffy.combo_flag = False
+    pass
+
+  @staticmethod
+  def do(luffy):
+    luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
+
+    # X키 입력 대기
+    if luffy.frame >= 3:  # ComboAttack1 프레임 종료
+      if get_time() - luffy.attack_time < 1.0 and luffy.combo_flag:
+        luffy.state_machine.add_event(('COMBO_NEXT', 0))  # ComboAttack2로 전환
+      else:
+        luffy.state_machine.add_event(('FRAME_DONE', 0))  # Idle로 전환
+
+  @staticmethod
+  def draw(luffy):
+    if luffy.face_dir == 1:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, '',
+                                               luffy.x+13, luffy.y, 400, 120)
+    else:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, 'h',
+                                               luffy.x-13, luffy.y, 400, 120)
+
+class ComboAttack2:
+  @staticmethod
+  def enter(luffy, e):
+    luffy.state_flag = 'ComboAttack2'
+    luffy.attack_time = get_time()
+
+  @staticmethod
+  def exit(luffy, e):
+    luffy.combo_flag = False
+    pass
+
+  @staticmethod
+  def do(luffy):
+    luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
+
+    # X키 입력 대기
+    if luffy.frame >= 8:  # ComboAttack2 프레임 종료
+      if get_time() - luffy.attack_time < 1.0 and luffy.combo_flag:
+        luffy.state_machine.add_event(('COMBO_NEXT', 0))  # ComboAttack3로 전환
+      else:
+        luffy.state_machine.add_event(('FRAME_DONE', 0))  # Idle로 전환
+
+  @staticmethod
+  def draw(luffy):
+    if luffy.face_dir == 1:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, '',
+                                               luffy.x-13, luffy.y, 400, 120)
+    else:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, 'h',
+                                               luffy.x+13, luffy.y, 400, 120)
+
+class ComboAttack3:
+  @staticmethod
+  def enter(luffy, e):
+    luffy.state_flag = 'ComboAttack3'
+
+  @staticmethod
+  def exit(luffy, e):
+    luffy.frame = 0
+    luffy.combo_flag = False
+
+  @staticmethod
+  def do(luffy):
+    luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
+
+    # 마지막 콤보 종료 후 Idle로 전환
+    if luffy.frame >= 16:  # ComboAttack3 프레임 종료
+      luffy.state_machine.add_event(('FRAME_DONE', 0))
+
+  @staticmethod
+  def draw(luffy):
+    if luffy.face_dir == 1:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, '',
+                                               luffy.x-13, luffy.y, 400, 120)
+    else:
+      luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, 'h',
+                                               luffy.x+13, luffy.y, 400, 120)
+
 
 class Jump:
   @staticmethod

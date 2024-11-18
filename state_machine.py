@@ -36,6 +36,9 @@ def c_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_c
 def c_up(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_c
+def next_combo(e):
+  return e[0] == 'COMBO_NEXT'
+
 
 class StateMachine:
   def __init__(self, o):
