@@ -95,19 +95,34 @@ class Luffy:
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'MainAttack':
       if self.face_dir == 1:
-        return [(self.x + 30, self.y - 40, self.x + 135, self.y + 60),
+        return [(self.x + 30, self.y - 40, self.x + 130, self.y + 60),
                 (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
       else:
-        return [(self.x - 30, self.y - 40, self.x - 135, self.y + 60),
+        return [(self.x - 30, self.y - 40, self.x - 130, self.y + 60),
                 (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'Jump':
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'ComboAttack1':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+      if self.face_dir == 1:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x + 30, self.y - 10, self.x + 80, self.y + 20)]
+      else:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x - 80, self.y - 10, self.x - 30, self.y + 20)]
     if self.state_flag == 'ComboAttack2':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+      if self.face_dir == 1:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x + 30, self.y - 10, self.x + 120, self.y + 20)]
+      else:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x - 120, self.y - 10, self.x - 30, self.y + 20)]
     if self.state_flag == 'ComboAttack3':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+      if self.face_dir == 1:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x + 30, self.y - 10, self.x + 175, self.y + 25)]
+      else:
+        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
+                (self.x - 175, self.y - 10, self.x - 30, self.y + 25)]
 
 
   def handle_collision(self, group, other):
