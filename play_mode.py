@@ -36,7 +36,7 @@ def handle_events():
 
 def update():
   game_world.update()
-  game_world.handle_collisions()
+  game_world.handle_collisions() ##### 충돌 감지 #####
 
 def draw():
   clear_canvas()

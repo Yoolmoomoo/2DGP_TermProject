@@ -57,16 +57,36 @@ class Luffy:
     self.state_machine.draw()
     # Collision box
     # draw_rectangle(*self.get_bb())
+    for bb in self.get_bb():
+      draw_rectangle(*bb)
+
   def get_bb(self):
     # xld, yld, xru, yru
-    return self.x-20, self.y-50, self.x+20, self.y+50
+    if self.state_flag == 'Idle':
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
+    if self.state_flag == 'FinishAttack':
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
+    if self.state_flag == 'Run':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state_flag == 'MainAttack':
+      if self.face_dir == 1:
+        return [(self.x + 30, self.y - 40, self.x + 135, self.y + 60),
+                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+      else:
+        return [(self.x - 30, self.y - 40, self.x - 135, self.y + 60),
+                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state_flag == 'Jump':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+
   def handle_collision(self, group, other):
+
     pass
 
 
 class Idle:
   @staticmethod
   def enter(luffy, e):
+    luffy.state_flag = 'Idle'
     if state_machine.start_event(e):
       luffy.face_dir = 1
     elif state_machine.right_down(e) or state_machine.left_up(e):
@@ -93,6 +113,7 @@ class Idle:
 class Run:
   @staticmethod
   def enter(luffy, e):
+    luffy.state_flag = 'Run'
     if state_machine.right_down(e) or state_machine.left_up(e):  # 오른쪽으로 RUN
       luffy.dir, luffy.face_dir = 1, 1
     elif state_machine.left_down(e) or state_machine.right_up(e):  # 왼쪽으로 RUN
@@ -120,6 +141,7 @@ class Run:
 class StartAttack:
   @staticmethod
   def enter(luffy, e):
+    # luffy.state_flag = 'StartAttack'
     luffy.frame = 0
     luffy.attack_flag = True
 
@@ -146,6 +168,7 @@ class StartAttack:
 class MainAttack:
   @staticmethod
   def enter(luffy, e):
+    luffy.state_flag = 'MainAttack'
     luffy.frame = 0
     luffy.attack_time = get_time()
 
@@ -174,6 +197,7 @@ class MainAttack:
 class FinishAttack:
   @staticmethod
   def enter(luffy, e):
+    luffy.state_flag = 'FinishAttack'
     luffy.frame = 0
     luffy.attack_flag = False  # 공격 종료
 
@@ -200,6 +224,7 @@ class FinishAttack:
 class Jump:
   @staticmethod
   def enter(luffy, e):
+    luffy.state_flag = 'Jump'
     luffy.dir = 0
     luffy.frame = 0
     luffy.dy = 1

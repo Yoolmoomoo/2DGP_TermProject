@@ -48,8 +48,10 @@ def remove_collision_object(o):
       pairs[1].remove(o)
 
 def collide(a, b):
-  la, ba, ra, ta = a.get_bb()
-  lb, bb, rb, tb = b.get_bb()
+  for bb in a.get_bb():
+    la, ba, ra, ta = bb
+  for bb in b.get_bb():
+    lb, bb, rb, tb = bb
 
   if la > rb: return False
   if ra < lb: return False
