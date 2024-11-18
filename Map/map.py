@@ -14,7 +14,7 @@ class Map:
 
     def get_bb(self):
         # fill here
-        return [(0, 0, 1200, 117)]
+        return [(0, 0, 1200, 114)]
 
     def handle_collision(self, group, other):
         pass

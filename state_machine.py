@@ -7,6 +7,8 @@ def time_out(e):
   return e[0] == 'TIME_OUT'
 def frame_done(e):
   return e[0] == 'FRAME_DONE'
+def landed(e):
+  return e[0] == 'LANDED'
 ################################# KEYBOARD : MOVE #################################
 def right_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
@@ -18,6 +20,13 @@ def left_up(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
 def space_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
+################################# KEYBOARD : HELD #################################
+def right_held(e):
+    return e[0] == 'RIGHT_HELD'
+def left_held(e):
+    return e[0] == 'LEFT_HELD'
+def both_held(e):
+  return e[0] == 'BOTH_HELD'
 ################################# KEYBOARD : ATTACK #################################
 def x_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_x

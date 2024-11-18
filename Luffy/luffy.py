@@ -1,3 +1,5 @@
+from unittest.mock import right
+
 from pico2d import *
 from speed_definition import *
 import state_machine
@@ -11,6 +13,7 @@ class Luffy:
     self.action = 1
     self.face_dir = 1
     self.dir = 0
+    self.key_states = {SDLK_RIGHT:False, SDLK_LEFT:False}
     self.attack_flag = False
     self.image_idle = load_image('./res/luffy/luffy_idle.png')
     self.image_run = load_image('./res/luffy/luffy_run.png')
@@ -24,10 +27,13 @@ class Luffy:
       {
         Idle : {state_machine.right_down : Run,
                 state_machine.left_down : Run,
-                # state_machine.right_up : Run,
-                # state_machine.left_up : Run,
+                state_machine.right_up : Run,
+                state_machine.left_up : Run,
                 state_machine.c_down : StartAttack,
                 state_machine.space_down : Jump,
+                state_machine.right_held: Run,
+                state_machine.left_held: Run,
+                state_machine.both_held: Idle
                },
         Run : {state_machine.right_down : Idle,
                 state_machine.left_down : Idle,
@@ -36,6 +42,7 @@ class Luffy:
                state_machine.c_down: StartAttack,
                state_machine.space_down: Jump,
                state_machine.frame_done: Idle,
+               state_machine.both_held: Idle
               },
         StartAttack: {state_machine.frame_done: MainAttack},
         MainAttack: {state_machine.time_out: FinishAttack,
@@ -45,14 +52,19 @@ class Luffy:
                        state_machine.right_up: Idle,
                        state_machine.left_up: Idle,
                        state_machine.frame_done: Idle},
-        Jump: {state_machine.frame_done: Idle,
+        Jump: {state_machine.landed: Idle,
               },
       }
     )
   def update(self):
     self.state_machine.update()
   def handle_event(self, event):
+    if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
+      self.key_states[event.key] = True
+    elif event.type == SDL_KEYUP and event.key in [SDLK_RIGHT, SDLK_LEFT]:
+      self.key_states[event.key] = False
     self.state_machine.add_event(('INPUT', event))
+
   def draw(self):
     self.state_machine.draw()
     # Collision box
@@ -79,8 +91,8 @@ class Luffy:
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
 
   def handle_collision(self, group, other):
-
-    pass
+    if group == 'luffy:map':
+      pass
 
 
 class Idle:
@@ -89,10 +101,24 @@ class Idle:
     luffy.state_flag = 'Idle'
     if state_machine.start_event(e):
       luffy.face_dir = 1
-    elif state_machine.right_down(e) or state_machine.left_up(e):
-      luffy.face_dir = -1
-    elif state_machine.right_up(e) or state_machine.left_down(e):
-      luffy.face_dir = 1
+    # 방향키가 눌려 있으면 이벤트 추가
+    right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
+    left_pressed = luffy.key_states.get(SDLK_LEFT, False)
+
+    if right_pressed:
+      if left_pressed:
+        luffy.state_machine.add_event(('BOTH_HELD', 0))
+      else:
+        luffy.state_machine.add_event(('RIGHT_HELD', 0))
+    elif left_pressed:
+      if right_pressed:
+        luffy.state_machine.add_event(('BOTH_HELD', 0))
+      else:
+        luffy.state_machine.add_event(('LEFT_HELD', 0))
+    # elif state_machine.right_down(e) or state_machine.left_up(e):
+    #   luffy.face_dir = -1
+    # elif state_machine.right_up(e) or state_machine.left_down(e):
+    #   luffy.face_dir = 1
 
     luffy.frame = 0
   @staticmethod
@@ -114,9 +140,18 @@ class Run:
   @staticmethod
   def enter(luffy, e):
     luffy.state_flag = 'Run'
+
+    right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
+    left_pressed = luffy.key_states.get(SDLK_LEFT, False)
+
     if state_machine.right_down(e) or state_machine.left_up(e):  # 오른쪽으로 RUN
       luffy.dir, luffy.face_dir = 1, 1
     elif state_machine.left_down(e) or state_machine.right_up(e):  # 왼쪽으로 RUN
+      luffy.dir, luffy.face_dir = -1, -1
+
+    if right_pressed:
+      luffy.dir, luffy.face_dir = 1, 1
+    if left_pressed:
       luffy.dir, luffy.face_dir = -1, -1
 
   @staticmethod
@@ -126,6 +161,7 @@ class Run:
 
   @staticmethod
   def do(luffy):
+
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
     luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 
@@ -225,9 +261,21 @@ class Jump:
   @staticmethod
   def enter(luffy, e):
     luffy.state_flag = 'Jump'
-    luffy.dir = 0
     luffy.frame = 0
     luffy.dy = 1
+
+    right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
+    left_pressed = luffy.key_states.get(SDLK_LEFT, False)
+
+    if state_machine.right_down(e) or state_machine.left_up(e):  # 오른쪽으로 RUN
+      luffy.dir, luffy.face_dir = 1, 1
+    elif state_machine.left_down(e) or state_machine.right_up(e):  # 왼쪽으로 RUN
+      luffy.dir, luffy.face_dir = -1, -1
+
+    if right_pressed:
+      luffy.dir, luffy.face_dir = 1, 1
+    if left_pressed:
+      luffy.dir, luffy.face_dir = -1, -1
 
   @staticmethod
   def exit(luffy, e):
@@ -235,18 +283,26 @@ class Jump:
 
   @staticmethod
   def do(luffy):
+    right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
+    left_pressed = luffy.key_states.get(SDLK_LEFT, False)
+
+    if right_pressed:
+      luffy.dir, luffy.face_dir = 1, 1
+    if left_pressed:
+      luffy.dir, luffy.face_dir = -1, -1
+
     luffy.frame += (FRAMES_PER_ACTION_JUMP * ACTION_PER_TIME * game_framework.frame_time)
     if luffy.frame >= 5: luffy.frame = 5
 
     if luffy.y >= 270:
       luffy.dy = -1
 
-    luffy.y += luffy.dy * RUN_SPEED_PPS * game_framework.frame_time*1.1
+    luffy.y += luffy.dy * RUN_SPEED_PPS * game_framework.frame_time*1.2
     luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 
     if luffy.y <= 114:
       luffy.y = 114
-      luffy.state_machine.add_event(('FRAME_DONE', 0))
+      luffy.state_machine.add_event(('LANDED', 0))
 
   @staticmethod
   def draw(luffy):
