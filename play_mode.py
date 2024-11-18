@@ -20,6 +20,9 @@ def init():
   luffy = Luffy()
   game_world.add_object(luffy, 1)
 
+  ##### 충돌 페어 등록 #####
+  game_world.add_collision_pair('luffy:map', luffy, map)
+
 def handle_events():
   events = get_events()
   for event in events:
@@ -33,6 +36,7 @@ def handle_events():
 
 def update():
   game_world.update()
+  game_world.handle_collisions()
 
 def draw():
   clear_canvas()
