@@ -5,6 +5,7 @@ import random
 import game_world
 from Map.map import Map
 from Luffy.luffy import Luffy
+from Naruto.naruto import Naruto
 
 def pause():
   pass
@@ -19,6 +20,9 @@ def init():
 
   luffy = Luffy()
   game_world.add_object(luffy, 1)
+
+  naruto = Naruto()
+  game_world.add_object(naruto, 1)
 
   ##### 충돌 페어 등록 #####
   game_world.add_collision_pair('luffy:map', luffy, map)
