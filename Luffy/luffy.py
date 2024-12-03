@@ -24,6 +24,9 @@ class Luffy:
     self.image_c_attack_finish = load_image('./res/luffy/luffy_c_attack_finish.png')
     self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
     self.image_jump = load_image('./res/luffy/luffy_jump.png')
+    self.hit_num = 0
+    self.hit_sound = load_wav('./res/sound/hit.wav')
+    self.hit_sound.set_volume(32)
     self.state_machine = StateMachine(self)
     self.state_machine.start(Idle)
     self.state_machine.set_transitions(
@@ -124,6 +127,11 @@ class Luffy:
   def handle_collision(self, group, other):
     if group == 'luffy:map':
       pass
+    if group == 'luffy:naruto':
+      if self.state_flag == 'Idle': return
+      for _ in range(self.hit_num):
+        self.hit_sound.play()
+      pass
 
 
 class Idle:
@@ -210,6 +218,7 @@ class StartAttack:
   def enter(luffy, e):
     # luffy.state_flag = 'StartAttack'
     luffy.frame = 0
+    luffy.hit_num = 0
     luffy.attack_flag = True
 
   @staticmethod
@@ -238,6 +247,7 @@ class MainAttack:
     luffy.hit_x, luffy.hit_y = luffy.x+30, luffy.y-40
     luffy.state_flag = 'MainAttack'
     luffy.frame = 0
+    luffy.hit_num = 8
     luffy.attack_time = get_time()
 
   @staticmethod
@@ -296,6 +306,7 @@ class ComboAttack1:
     luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
     luffy.state_flag = 'ComboAttack1'
     luffy.attack_time = get_time()
+    luffy.hit_num = 1
 
   @staticmethod
   def exit(luffy, e):
@@ -367,6 +378,7 @@ class ComboAttack3:
     luffy.frame = 0
     luffy.combo_flag = False
     luffy.hit_x, luffy.hit_y = 0, 0
+    luffy.hit_num = 0
 
   @staticmethod
   def do(luffy):

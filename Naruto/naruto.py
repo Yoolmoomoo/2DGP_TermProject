@@ -89,44 +89,9 @@ class Naruto:
     # xld, yld, xru, yru
     if self.state_flag == 'Idle':
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
-    if self.state_flag == 'FinishAttack':
-      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
-    if self.state_flag == 'Run':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
-    if self.state_flag == 'MainAttack':
-      if self.face_dir == 1:
-        return [(self.x + 30, self.y - 40, self.x + 130, self.y + 60),
-                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
-      else:
-        return [(self.x - 30, self.y - 40, self.x - 130, self.y + 60),
-                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
-    if self.state_flag == 'Jump':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
-    if self.state_flag == 'ComboAttack1':
-      if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 80, self.y + 20)]
-      else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 80, self.y - 10, self.x - 30, self.y + 20)]
-    if self.state_flag == 'ComboAttack2':
-      if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 120, self.y + 20)]
-      else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 120, self.y - 10, self.x - 30, self.y + 20)]
-    if self.state_flag == 'ComboAttack3':
-      if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 175, self.y + 25)]
-      else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 175, self.y - 10, self.x - 30, self.y + 25)]
-
 
   def handle_collision(self, group, other):
-    if group == 'luffy:map':
+    if group == 'luffy:naruto':
       pass
 
 

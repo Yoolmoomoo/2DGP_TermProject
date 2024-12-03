@@ -26,6 +26,7 @@ def init():
 
   ##### 충돌 페어 등록 #####
   game_world.add_collision_pair('luffy:map', luffy, map)
+  game_world.add_collision_pair('luffy:naruto', luffy, naruto)
 
 def handle_events():
   events = get_events()
