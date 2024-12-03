@@ -19,7 +19,7 @@ def init():
   game_world.add_object(map,0)
 
   luffy = Luffy()
-  game_world.add_object(luffy, 1)
+  game_world.add_object(luffy, 2)
 
   naruto = Naruto()
   game_world.add_object(naruto, 1)

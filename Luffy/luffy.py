@@ -4,12 +4,13 @@ from pico2d import *
 from speed_definition import *
 import state_machine
 import game_framework
-from state_machine import StateMachine, left_up
+from state_machine import StateMachine
 
 
 class Luffy:
   def __init__(self):
     self.x, self.y = 400, 114
+    self.hit_x, self.hit_y = 0, 0
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -64,6 +65,7 @@ class Luffy:
         Jump: {state_machine.landed: Idle},
       }
     )
+
   def update(self):
     self.state_machine.update()
   def handle_event(self, event):
@@ -89,40 +91,34 @@ class Luffy:
     # xld, yld, xru, yru
     if self.state_flag == 'Idle':
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
-    if self.state_flag == 'FinishAttack':
-      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'Run':
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'MainAttack':
       if self.face_dir == 1:
-        return [(self.x + 30, self.y - 40, self.x + 130, self.y + 60),
-                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+        return [(self.hit_x, self.hit_y, self.hit_x + 100, self.hit_y + 100)]
       else:
-        return [(self.x - 30, self.y - 40, self.x - 130, self.y + 60),
-                (self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+        return [(self.hit_x -60, self.hit_y, self.hit_x - 160, self.hit_y + 100)]
+    if self.state_flag == 'FinishAttack':
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'Jump':
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state_flag == 'ComboAttack1':
       if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 80, self.y + 20)]
+        return [(self.hit_x, self.hit_y, self.hit_x + 50, self.hit_y + 30)]
       else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 80, self.y - 10, self.x - 30, self.y + 20)]
+        return [(self.hit_x-110, self.hit_y, self.hit_x - 60, self.hit_y + 30)]
     if self.state_flag == 'ComboAttack2':
+      if self.hit_x == 0 and self.hit_y == 0: return [(0,0,0,0)]
       if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 120, self.y + 20)]
+        return [(self.hit_x, self.hit_y, self.hit_x + 90, self.hit_y + 30)]
       else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 120, self.y - 10, self.x - 30, self.y + 20)]
+        return [(self.hit_x - 150, self.hit_y, self.hit_x - 60, self.hit_y + 30)]
     if self.state_flag == 'ComboAttack3':
+      if self.hit_x == 0 and self.hit_y == 0: return [(0, 0, 0, 0)]
       if self.face_dir == 1:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x + 30, self.y - 10, self.x + 175, self.y + 25)]
+        return [(self.hit_x, self.hit_y, self.hit_x + 145, self.hit_y + 35)]
       else:
-        return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40),
-                (self.x - 175, self.y - 10, self.x - 30, self.y + 25)]
+        return [(self.hit_x - 205, self.hit_y, self.hit_x - 60, self.hit_y + 35)]
 
 
   def handle_collision(self, group, other):
@@ -239,12 +235,14 @@ class StartAttack:
 class MainAttack:
   @staticmethod
   def enter(luffy, e):
+    luffy.hit_x, luffy.hit_y = luffy.x+30, luffy.y-40
     luffy.state_flag = 'MainAttack'
     luffy.frame = 0
     luffy.attack_time = get_time()
 
   @staticmethod
   def exit(luffy, e):
+    luffy.hit_x, luffy.hit_y = 0, 0
     luffy.frame = 0
 
   @staticmethod
@@ -295,11 +293,13 @@ class FinishAttack:
 class ComboAttack1:
   @staticmethod
   def enter(luffy, e):
+    luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
     luffy.state_flag = 'ComboAttack1'
     luffy.attack_time = get_time()
 
   @staticmethod
   def exit(luffy, e):
+    luffy.hit_x, luffy.hit_y = 0, 0
     luffy.combo_flag = False
     pass
 
@@ -331,12 +331,15 @@ class ComboAttack2:
 
   @staticmethod
   def exit(luffy, e):
+    luffy.hit_x, luffy.hit_y = 0, 0
     luffy.combo_flag = False
-    pass
 
   @staticmethod
   def do(luffy):
     luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
+
+    if luffy.frame > 5.7:
+        luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
 
     # X키 입력 대기
     if luffy.frame >= 8:  # ComboAttack2 프레임 종료
@@ -363,10 +366,14 @@ class ComboAttack3:
   def exit(luffy, e):
     luffy.frame = 0
     luffy.combo_flag = False
+    luffy.hit_x, luffy.hit_y = 0, 0
 
   @staticmethod
   def do(luffy):
     luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
+
+    if luffy.frame > 13.5:
+        luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
 
     # 마지막 콤보 종료 후 Idle로 전환
     if luffy.frame >= 16:  # ComboAttack3 프레임 종료
