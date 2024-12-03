@@ -127,8 +127,7 @@ class Luffy:
   def handle_collision(self, group, other):
     if group == 'luffy:map':
       pass
-    if group == 'luffy:naruto':
-      if self.state_flag == 'Idle': return
+    if group == 'luffy:naruto' and self.attack_flag == True:
       for _ in range(self.hit_num):
         self.hit_sound.play()
 
@@ -248,11 +247,13 @@ class MainAttack:
     luffy.frame = 0
     luffy.hit_num = 8
     luffy.attack_time = get_time()
+    luffy.attack_flag = True
 
   @staticmethod
   def exit(luffy, e):
     luffy.hit_x, luffy.hit_y = 0, 0
     luffy.frame = 0
+    luffy.attack_flag = False
 
   @staticmethod
   def do(luffy):
@@ -306,6 +307,7 @@ class ComboAttack1:
     luffy.state_flag = 'ComboAttack1'
     luffy.attack_time = get_time()
     luffy.hit_num = 1
+    luffy.attack_flag = True
 
   @staticmethod
   def exit(luffy, e):
@@ -338,6 +340,7 @@ class ComboAttack2:
   def enter(luffy, e):
     luffy.state_flag = 'ComboAttack2'
     luffy.attack_time = get_time()
+    luffy.attack_flag = True
 
   @staticmethod
   def exit(luffy, e):
@@ -371,6 +374,7 @@ class ComboAttack3:
   @staticmethod
   def enter(luffy, e):
     luffy.state_flag = 'ComboAttack3'
+    luffy.attack_flag = True
 
   @staticmethod
   def exit(luffy, e):
@@ -378,6 +382,7 @@ class ComboAttack3:
     luffy.combo_flag = False
     luffy.hit_x, luffy.hit_y = 0, 0
     luffy.hit_num = 0
+    luffy.attack_flag = False
 
   @staticmethod
   def do(luffy):

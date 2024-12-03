@@ -18,6 +18,7 @@ class Naruto:
     self.key_states = {SDLK_RIGHT:False, SDLK_LEFT:False}
     self.attack_flag = False
     self.image_idle = load_image('./res/naruto/naruto_idle.png')
+    self.image_take_damage = load_image('./res/naruto/naruto_take_damage.png')
     # self.image_run = load_image('./res/luffy/luffy_run.png')
     # self.image_c_attack_start = load_image('./res/luffy/luffy_c_attack_start.png')
     # self.image_c_attack = load_image('./res/luffy/luffy_c_attack.png')
@@ -38,7 +39,8 @@ class Naruto:
                 state_machine.space_down : Jump,
                 state_machine.right_held: Run,
                 state_machine.left_held: Run,
-                state_machine.both_held: Idle
+                state_machine.both_held: Idle,
+                state_machine.take_damage: TakeDamage,
                },
         Run : {state_machine.right_down : Idle,
                 state_machine.left_down : Idle,
@@ -48,7 +50,8 @@ class Naruto:
                state_machine.x_down: ComboAttack1,
                state_machine.space_down: Jump,
                state_machine.frame_done: Idle,
-               state_machine.both_held: Idle
+               state_machine.both_held: Idle,
+               state_machine.take_damage: TakeDamage,
               },
         StartAttack: {state_machine.frame_done: MainAttack},
         MainAttack: {state_machine.time_out: FinishAttack,
@@ -64,14 +67,11 @@ class Naruto:
                        state_machine.next_combo: ComboAttack3},
         ComboAttack3: {state_machine.frame_done: Idle},
         Jump: {state_machine.landed: Idle},
+        TakeDamage: {state_machine.frame_done: Idle}
       }
     )
   def update(self):
     self.state_machine.update()
-    if self.is_hit:
-      self.hit_effect_timer -= game_framework.frame_time
-      if self.hit_effect_timer <= 0:
-        self.is_hit = False
 
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
@@ -91,9 +91,7 @@ class Naruto:
     # draw_rectangle(*self.get_bb())
     for bb in self.get_bb():
       draw_rectangle(*bb)
-    if self.is_hit == True:
-     self.hit_effect.clip_composite_draw(0, 0, 256, 256,
-                                          0, '', self.x, self.y, 70, 70)
+
 
   def get_bb(self):
     # xld, yld, xru, yru
@@ -101,9 +99,9 @@ class Naruto:
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
 
   def handle_collision(self, group, other):
-    if group == 'luffy:naruto':
-      self.is_hit = True
+    if group == 'luffy:naruto' and other.attack_flag == True:
       self.hit_effect_timer = 0.1
+      self.state_machine.add_event(('TAKE_DAMAGE', 0))
 
 
 
@@ -414,3 +412,58 @@ class Jump:
     else:
       naruto.image_jump.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, 'h',
                                                       naruto.x, naruto.y, 120, 120)
+
+class TakeDamage:
+  @staticmethod
+  def enter(naruto, e):
+    naruto.state_flag = 'Idle'
+    # if state_machine.start_event(e):
+    #   naruto.face_dir = -1
+    # # 방향키가 눌려 있으면 이벤트 추가
+    # right_pressed = naruto.key_states.get(SDLK_RIGHT, False)
+    # left_pressed = naruto.key_states.get(SDLK_LEFT, False)
+    #
+    # if right_pressed:
+    #   if left_pressed:
+    #     naruto.state_machine.add_event(('BOTH_HELD', 0))
+    #   else:
+    #     naruto.state_machine.add_event(('RIGHT_HELD', 0))
+    # elif left_pressed:
+    #   if right_pressed:
+    #     naruto.state_machine.add_event(('BOTH_HELD', 0))
+    #   else:
+    #     naruto.state_machine.add_event(('LEFT_HELD', 0))
+    # elif state_machine.right_down(e) or state_machine.left_up(e):
+    #   naruto.face_dir = -1
+    # elif state_machine.right_up(e) or state_machine.left_down(e):
+    #   naruto.face_dir = 1
+
+    naruto.frame = 0
+    naruto.is_hit = True
+  @staticmethod
+  def exit(naruto, e):
+    naruto.frame = 0
+    naruto.is_hit = False
+  @staticmethod
+  def do(naruto):
+    naruto.frame = (naruto.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
+    if naruto.is_hit:
+      naruto.hit_effect_timer -= game_framework.frame_time
+      if naruto.hit_effect_timer <= 0:
+        naruto.is_hit = False
+        naruto.state_machine.add_event(('FRAME_DONE', 0))
+    naruto.x += 0.1
+  @staticmethod
+  def draw(naruto):
+    if naruto.face_dir == 1:
+      if naruto.is_hit == True:
+        naruto.image_take_damage.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
+                                             0, '', naruto.x, naruto.y, 120, 120)
+        naruto.hit_effect.clip_composite_draw(0, 0, 256, 256,
+                                            0, '', naruto.x, naruto.y, 70, 70)
+    else:
+      naruto.image_take_damage.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
+                                                   0, 'h', naruto.x, naruto.y, 120, 120)
+      naruto.hit_effect.clip_composite_draw(0, 0, 256, 256,
+                                            0, '', naruto.x, naruto.y, 70, 70)
+      pass

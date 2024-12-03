@@ -9,6 +9,8 @@ def frame_done(e):
   return e[0] == 'FRAME_DONE'
 def landed(e):
   return e[0] == 'LANDED'
+def take_damage(e):
+  return e[0] == 'TAKE_DAMAGE'
 ################################# KEYBOARD : MOVE #################################
 def right_down(e):
   return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
