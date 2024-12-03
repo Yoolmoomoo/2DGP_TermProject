@@ -14,6 +14,7 @@ class Naruto:
     self.face_dir = 1
     self.combo_flag = False
     self.dir = 0
+    self.is_hit = False
     self.key_states = {SDLK_RIGHT:False, SDLK_LEFT:False}
     self.attack_flag = False
     self.image_idle = load_image('./res/naruto/naruto_idle.png')
@@ -23,6 +24,7 @@ class Naruto:
     # self.image_c_attack_finish = load_image('./res/luffy/luffy_c_attack_finish.png')
     # self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
     # self.image_jump = load_image('./res/luffy/luffy_jump.png')
+    self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state_machine = StateMachine(self)
     self.state_machine.start(Idle)
     self.state_machine.set_transitions(
@@ -66,6 +68,11 @@ class Naruto:
     )
   def update(self):
     self.state_machine.update()
+    if self.is_hit:
+      self.hit_effect_timer -= game_framework.frame_time
+      if self.hit_effect_timer <= 0:
+        self.is_hit = False
+
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
       self.key_states[event.key] = True
@@ -84,6 +91,9 @@ class Naruto:
     # draw_rectangle(*self.get_bb())
     for bb in self.get_bb():
       draw_rectangle(*bb)
+    if self.is_hit == True:
+     self.hit_effect.clip_composite_draw(0, 0, 256, 256,
+                                          0, '', self.x, self.y, 70, 70)
 
   def get_bb(self):
     # xld, yld, xru, yru
@@ -92,7 +102,9 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto':
-      pass
+      self.is_hit = True
+      self.hit_effect_timer = 0.1
+
 
 
 class Idle:

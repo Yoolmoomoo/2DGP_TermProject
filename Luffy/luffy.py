@@ -131,7 +131,6 @@ class Luffy:
       if self.state_flag == 'Idle': return
       for _ in range(self.hit_num):
         self.hit_sound.play()
-      pass
 
 
 class Idle:
