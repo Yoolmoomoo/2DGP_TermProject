@@ -4,12 +4,15 @@ from pico2d import *
 from speed_definition import *
 import state_machine
 import game_framework
+from hp import Hp
 from state_machine import StateMachine, left_up
 
 
 class Naruto:
   def __init__(self):
     self.x, self.y = 700, 114
+    self.hp = 100
+    self.hp_bar = Hp(self.x+190, self.hp)
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -87,10 +90,11 @@ class Naruto:
 
   def draw(self):
     self.state_machine.draw()
+    self.hp_bar.draw('h')
     # Collision box
     # draw_rectangle(*self.get_bb())
-    for bb in self.get_bb():
-      draw_rectangle(*bb)
+    # for bb in self.get_bb():
+    #   draw_rectangle(*bb)
 
 
   def get_bb(self):
@@ -100,6 +104,8 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
+      damage = 10
+      self.hp -= damage
       if other.face_dir == 1:
         self.face_dir = -1
       else:

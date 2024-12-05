@@ -13,7 +13,7 @@ def resume():
   pass
 
 def init():
-  open_canvas(1200, 800)
+  open_canvas(1100, 800)
   global luffy
 
   map = Map()

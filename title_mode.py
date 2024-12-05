@@ -4,7 +4,7 @@ from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE, SDL_MouseButton
 import play_mode
 
 def init():
-  open_canvas(256, 384)
+  open_canvas(512, 768)
   global image
   image = load_image('./res/map/title.png')
   pass
@@ -26,7 +26,7 @@ def handle_events():
 
 def draw():
   clear_canvas()
-  image.draw(128,192)
+  image.draw(256, 384)
   update_canvas()
 
 def update():

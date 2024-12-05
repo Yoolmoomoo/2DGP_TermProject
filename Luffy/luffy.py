@@ -5,12 +5,14 @@ from speed_definition import *
 import state_machine
 import game_framework
 from state_machine import StateMachine
-
+from hp import Hp
 
 class Luffy:
   def __init__(self):
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
+    self.hp = 100
+    self.hp_bar = Hp(self.x-190, self.hp)
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -85,15 +87,16 @@ class Luffy:
 
   def draw(self):
     self.state_machine.draw()
+    self.hp_bar.draw()
     # Collision box
     # draw_rectangle(*self.get_bb())
-    for bb in self.get_bb():
-      draw_rectangle(*bb)
+    # for bb in self.get_bb():
+    #   draw_rectangle(*bb)
 
   def get_bb(self):
     # xld, yld, xru, yru
     if self.state_flag == 'Idle':
-      return [(0, 0, 0, 0)]
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'Run':
       return [(0, 0, 0, 0)]
     if self.state_flag == 'MainAttack':
@@ -128,6 +131,8 @@ class Luffy:
     if group == 'luffy:map':
       pass
     if group == 'luffy:naruto' and self.attack_flag == True:
+      damage = 10
+      self.hp -= damage
       for _ in range(self.hit_num):
         self.hit_sound.play()
 
