@@ -75,6 +75,7 @@ class Naruto:
     )
   def update(self):
     self.state_machine.update()
+    self.hp_bar.update(self.hp)
 
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:

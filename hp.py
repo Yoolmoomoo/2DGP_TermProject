@@ -16,7 +16,7 @@ class Hp:
     hp_ratio = self.current_hp / self.max_hp
 
     fg_width = int(self.bar_fg.w * hp_ratio)
-    self.bar_fg.clip_composite_draw(0, 0, fg_width, 17, 0, h_flag, self.x, self.y, 400, 40)
+    self.bar_fg.clip_composite_draw(0, 0, fg_width, 17, 0, h_flag, self.x - (1 - hp_ratio) * 200, self.y, 400, 40)
 
   def update(self, new_hp):
     self.current_hp -= new_hp

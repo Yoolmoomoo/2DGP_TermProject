@@ -73,6 +73,7 @@ class Luffy:
 
   def update(self):
     self.state_machine.update()
+    self.hp_bar.update(self.hp)
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
       self.key_states[event.key] = True
@@ -140,6 +141,7 @@ class Luffy:
 class Idle:
   @staticmethod
   def enter(luffy, e):
+    luffy.attack_flag = False
     luffy.state_flag = 'Idle'
     if state_machine.start_event(e):
       luffy.face_dir = 1
@@ -182,6 +184,7 @@ class Run:
   @staticmethod
   def enter(luffy, e):
     luffy.state_flag = 'Run'
+    luffy.attack_flag = False
 
     right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
     left_pressed = luffy.key_states.get(SDLK_LEFT, False)
