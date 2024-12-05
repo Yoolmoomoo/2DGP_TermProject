@@ -1,4 +1,3 @@
-# from unittest.mock import right
 
 from pico2d import *
 from speed_definition import *
@@ -42,6 +41,18 @@ class Naruto:
     if self.state == 'Walk':
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
 
+    if self.state == 'TakeDamage':
+      self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
+      if self.is_hit:
+        self.hit_effect_timer -= game_framework.frame_time
+        if self.hit_effect_timer <= 0:
+          self.is_hit = False
+          self.state_machine.add_event(('FRAME_DONE', 0))
+      if self.face_dir == -1:
+        self.x += 0.1
+      else:
+        self.x -= 0.1
+
     self.hp_bar.update(self.hp)
     self.bt.run()
 
@@ -61,6 +72,19 @@ class Naruto:
         self.image_move.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
                                               0, 'h', self.x, self.y, 120, 120)
 
+    if self.state == 'TakeDamage':
+      if self.face_dir == 1:
+        if self.is_hit == True:
+          self.image_take_damage.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                       0, '', self.x, self.y, 120, 120)
+          self.hit_effect.clip_composite_draw(0, 0, 256, 256,
+                                                0, '', self.x, self.y, 70, 70)
+      else:
+        self.image_take_damage.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, 'h', self.x, self.y, 120, 120)
+        self.hit_effect.clip_composite_draw(0, 0, 256, 256,
+                                              0, '', self.x, self.y, 70, 70)
+
     self.hp_bar.draw(self.hp)
 
     # Collision box
@@ -70,23 +94,24 @@ class Naruto:
 
   def get_bb(self):
     # xld, yld, xru, yru
-   if self.state == 'Idle':
-     return [(self.x-30, self.y-40, self.x+30, self.y+40)]
-   if self.state == 'Walk':
-     return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state == 'Idle':
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
+    if self.state == 'Walk':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+    if self.state == 'TakeDamage':
+      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
 
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
       self.hp -= other.damage
       self.hit_sound.play()
-      print(self.hp)
       if other.face_dir == 1:
         self.face_dir = -1
       else:
         self.face_dir = 1
       self.hit_effect_timer = 0.01
-      # self.state_machine.add_event(('TAKE_DAMAGE', 0))
+      self.state = 'TakeDamage'
 
 
   def distance_less_than(self,x1,y1,x2,y2,r):
@@ -114,6 +139,25 @@ class Naruto:
     else:
       return BehaviorTree.FAIL
 
+  def is_in_attack_range(self):
+    if self.distance_less_than(play_mode.luffy.x, play_mode.luffy.y, self.x, self.y, 2):
+        return BehaviorTree.SUCCESS
+    else:
+        return BehaviorTree.FAIL
+
+  def stop_at_attack_range(self):
+    self.state = 'Idle'
+    return BehaviorTree.SUCCESS
+
+  def take_damage(self):
+    self.state = 'TakeDamage'
+    self.is_hit = True
+    # 데미지 애니메이션이 끝나면
+    if self.frame >= 4:
+      self.state = 'Idle'
+      return BehaviorTree.SUCCESS
+    return BehaviorTree.RUNNING
+
   def attack1(self):
     self.state = 'Attack1'
     # 공격이 완료되면 Idle 상태로 전환
@@ -123,11 +167,15 @@ class Naruto:
     return BehaviorTree.RUNNING
 
   def build_behavior_tree(self):
+    c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
+    a1 = Action('공격 범위 내 멈춤', self.stop_at_attack_range)
+    attack_range = Sequence('공격 범위', c1, a1)
+
     c2 = Condition('플레이어가 근처에 있는가?', self.is_nearby, 20)
     a2 = Action('플레이어에게 접근', self.move_to_player)
     chase_player = Sequence('플레이어 추적', c2, a2)
 
-    root = Selector('행동 루트', chase_player)
+    root = Selector('행동 루트', attack_range, chase_player)
 
     self.bt = BehaviorTree(root)
 
@@ -277,61 +325,3 @@ class Jump:
     else:
       naruto.image_jump.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, 'h',
                                                       naruto.x, naruto.y, 120, 120)
-
-class TakeDamage:
-  @staticmethod
-  def enter(naruto, e):
-    naruto.state_flag = 'Idle'
-    # if state_machine.start_event(e):
-    #   naruto.face_dir = -1
-    # # 방향키가 눌려 있으면 이벤트 추가
-    # right_pressed = naruto.key_states.get(SDLK_RIGHT, False)
-    # left_pressed = naruto.key_states.get(SDLK_LEFT, False)
-    #
-    # if right_pressed:
-    #   if left_pressed:
-    #     naruto.state_machine.add_event(('BOTH_HELD', 0))
-    #   else:
-    #     naruto.state_machine.add_event(('RIGHT_HELD', 0))
-    # elif left_pressed:
-    #   if right_pressed:
-    #     naruto.state_machine.add_event(('BOTH_HELD', 0))
-    #   else:
-    #     naruto.state_machine.add_event(('LEFT_HELD', 0))
-    # elif state_machine.right_down(e) or state_machine.left_up(e):
-    #   naruto.face_dir = -1
-    # elif state_machine.right_up(e) or state_machine.left_down(e):
-    #   naruto.face_dir = 1
-
-    naruto.frame = 0
-    naruto.is_hit = True
-  @staticmethod
-  def exit(naruto, e):
-    naruto.frame = 0
-    naruto.is_hit = False
-  @staticmethod
-  def do(naruto):
-    naruto.frame = (naruto.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
-    if naruto.is_hit:
-      naruto.hit_effect_timer -= game_framework.frame_time
-      if naruto.hit_effect_timer <= 0:
-        naruto.is_hit = False
-        naruto.state_machine.add_event(('FRAME_DONE', 0))
-    if naruto.face_dir == -1:
-      naruto.x += 0.1
-    else:
-      naruto.x -= 0.1
-  @staticmethod
-  def draw(naruto):
-    if naruto.face_dir == 1:
-      if naruto.is_hit == True:
-        naruto.image_take_damage.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
-                                             0, '', naruto.x, naruto.y, 120, 120)
-        naruto.hit_effect.clip_composite_draw(0, 0, 256, 256,
-                                            0, '', naruto.x, naruto.y, 70, 70)
-    else:
-      naruto.image_take_damage.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
-                                                   0, 'h', naruto.x, naruto.y, 120, 120)
-      naruto.hit_effect.clip_composite_draw(0, 0, 256, 256,
-                                            0, '', naruto.x, naruto.y, 70, 70)
-      pass
