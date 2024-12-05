@@ -16,7 +16,7 @@ class Naruto:
     self.hp_bar = Hp(self.x-20, self.hp)
     self.damage = 0.1
     self.action = 1
-    self.face_dir = 1
+    self.face_dir = -1
     self.combo_flag = False
     self.dir = 0
     self.hit_sound = load_wav('./res/sound/hit.wav')
@@ -35,10 +35,17 @@ class Naruto:
 
   def update(self):
     if self.state == 'Idle':
-      self.face_dir = -1
+      if play_mode.luffy.x > self.x:
+        self.face_dir = 1
+      else:
+        self.face_dir = -1
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
 
     if self.state == 'Walk':
+      if play_mode.luffy.x > self.x:
+        self.face_dir = 1
+      else:
+        self.face_dir = -1
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
 
     if self.state == 'TakeDamage':
@@ -67,17 +74,16 @@ class Naruto:
     if self.state == 'Walk':
       if self.face_dir == 1:
         self.image_move.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
-                                              0, '', self.x, self.y, 120, 120)
+                                              0, '', self.x, self.y, 100, 100)
       else:
         self.image_move.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
-                                              0, 'h', self.x, self.y, 120, 120)
+                                              0, 'h', self.x, self.y, 100, 100)
 
     if self.state == 'TakeDamage':
       if self.face_dir == 1:
-        if self.is_hit == True:
-          self.image_take_damage.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
-                                                       0, '', self.x, self.y, 120, 120)
-          self.hit_effect.clip_composite_draw(0, 0, 256, 256,
+        self.image_take_damage.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, '', self.x, self.y, 120, 120)
+        self.hit_effect.clip_composite_draw(0, 0, 256, 256,
                                                 0, '', self.x, self.y, 70, 70)
       else:
         self.image_take_damage.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
