@@ -1,9 +1,12 @@
 import game_framework
-from pico2d import load_image, get_events, update_canvas, clear_canvas
+from pico2d import load_image, get_events, update_canvas, clear_canvas, close_canvas, open_canvas
 from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE, SDL_MouseButtonEvent
 import play_mode
 
 def init():
+  open_canvas(256, 384)
+  global image
+  image = load_image('./res/map/title.png')
   pass
 
 def finish():
@@ -18,11 +21,12 @@ def handle_events():
     elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
       game_framework.quit()
     elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
+      close_canvas()
       game_framework.change_mode(play_mode)
 
 def draw():
   clear_canvas()
-  image.draw(400,300)
+  image.draw(128,192)
   update_canvas()
 
 def update():

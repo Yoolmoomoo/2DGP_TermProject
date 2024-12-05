@@ -415,6 +415,7 @@ class Jump:
     luffy.state_flag = 'Jump'
     luffy.frame = 0
     luffy.dy = 1
+    luffy.attack_flag = False
 
     right_pressed = luffy.key_states.get(SDLK_RIGHT, False)
     left_pressed = luffy.key_states.get(SDLK_LEFT, False)
