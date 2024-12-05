@@ -6,7 +6,8 @@ import state_machine
 import game_framework
 from hp import Hp
 from state_machine import StateMachine, left_up
-
+from behavior_tree import *
+import play_mode
 
 class Naruto:
   def __init__(self):
@@ -25,12 +26,7 @@ class Naruto:
     self.attack_flag = False
     self.image_idle = load_image('./res/naruto/naruto_idle.png')
     self.image_take_damage = load_image('./res/naruto/naruto_take_damage.png')
-    # self.image_run = load_image('./res/luffy/luffy_run.png')
-    # self.image_c_attack_start = load_image('./res/luffy/luffy_c_attack_start.png')
-    # self.image_c_attack = load_image('./res/luffy/luffy_c_attack.png')
-    # self.image_c_attack_finish = load_image('./res/luffy/luffy_c_attack_finish.png')
-    # self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
-    # self.image_jump = load_image('./res/luffy/luffy_jump.png')
+    self.image_move = load_image('./res/naruto/naruto_move.png')
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state_machine = StateMachine(self)
     self.state_machine.start(Idle)
@@ -40,7 +36,6 @@ class Naruto:
                 state_machine.left_down : Run,
                 state_machine.right_up : Run,
                 state_machine.left_up : Run,
-                state_machine.c_down : StartAttack,
                 state_machine.x_down: ComboAttack1,
                 state_machine.space_down : Jump,
                 state_machine.right_held: Run,
@@ -52,21 +47,12 @@ class Naruto:
                 state_machine.left_down : Idle,
                 state_machine.right_up : Idle,
                 state_machine.left_up : Idle,
-               state_machine.c_down: StartAttack,
                state_machine.x_down: ComboAttack1,
                state_machine.space_down: Jump,
                state_machine.frame_done: Idle,
                state_machine.both_held: Idle,
                state_machine.take_damage: TakeDamage,
               },
-        StartAttack: {state_machine.frame_done: MainAttack},
-        MainAttack: {state_machine.time_out: FinishAttack,
-                    },
-        FinishAttack: {state_machine.right_down: Idle,
-                       state_machine.left_down: Idle,
-                       state_machine.right_up: Idle,
-                       state_machine.left_up: Idle,
-                       state_machine.frame_done: Idle},
         ComboAttack1: {state_machine.frame_done: Idle,
                        state_machine.next_combo: ComboAttack2},
         ComboAttack2: {state_machine.frame_done: Idle,
@@ -76,9 +62,12 @@ class Naruto:
         TakeDamage: {state_machine.frame_done: Idle}
       }
     )
+    self.build_behavior_tree()
+
   def update(self):
     self.state_machine.update()
     self.hp_bar.update(self.hp)
+    self.bt.run()
 
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
@@ -118,6 +107,38 @@ class Naruto:
       self.hit_effect_timer = 0.01
       self.state_machine.add_event(('TAKE_DAMAGE', 0))
 
+  def distance_less_than(self,x1,y1,x2,y2,r):
+    distance2 = (x1-x2)**2 + (y1-y2)**2
+    return distance2 < (PIXEL_PER_METER*r)**2
+
+  def move_slightly_to(self, tx, ty): # 목적지까지 프레임타임 단위로(프레임마다) 살짝씩 가는 함수
+      self.dir = math.atan2(ty-self.y, tx-self.x) # dir을 radian으로 해석
+      distance = RUN_SPEED_PPS * game_framework.frame_time
+      self.x += distance * math.cos(self.dir)
+      self.y += distance * math.sin(self.dir)
+
+  def move_to_player(self, r=10.0):
+    self.state = 'Walk'
+    self.move_slightly_to(play_mode.luffy.x, play_mode.luffy.y)
+    if self.distance_less_than(play_mode.luffy.x, play_mode.luffy.y, self.x, self.y, r):
+      return BehaviorTree.SUCCESS
+    else:
+      return BehaviorTree.RUNNING
+
+  def is_nearby(self, distance):
+    if self.distance_less_than(play_mode.luffy.x, play_mode.luffy.y, self.x, self.y, distance):
+      return BehaviorTree.SUCCESS
+    else:
+      return BehaviorTree.FAIL
+
+  def build_behavior_tree(self):
+    c2 = Condition('플레이어가 근처에 있는가?', self.is_nearby, 20)
+    a2 = Action('플레이어에게 접근', self.move_to_player)
+    chase_player = Sequence('플레이어 추적', c2, a2)
+
+    root = chase_player
+
+    self.bt = BehaviorTree(root)
 
 
 class Idle:
@@ -193,94 +214,11 @@ class Run:
   @staticmethod
   def draw(naruto):
     if naruto.face_dir == 1:
-      naruto.image_run.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
+      naruto.image_move.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
                                            0, '', naruto.x, naruto.y, 120, 120)
     else:
-      naruto.image_run.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
+      naruto.image_move.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
                                           0, 'h', naruto.x, naruto.y, 120, 120)
-
-class StartAttack:
-  @staticmethod
-  def enter(naruto, e):
-    # naruto.state_flag = 'StartAttack'
-    naruto.frame = 0
-    naruto.attack_flag = True
-
-  @staticmethod
-  def exit(naruto, e):
-    naruto.frame = 0
-
-  @staticmethod
-  def do(naruto):
-    naruto.frame += (FRAMES_PER_ACTION_SA * ACTION_PER_TIME * game_framework.frame_time)
-    if naruto.frame >= 2:  # 2프레임이 지나면 MainAttack으로 전환
-      # naruto.state_machine.cur_state = MainAttack
-      naruto.state_machine.add_event(('FRAME_DONE', 0))
-
-  @staticmethod
-  def draw(naruto):
-    if naruto.face_dir == 1:
-      naruto.image_c_attack_start.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, '',
-                                                   naruto.x, naruto.y, 170, 170)
-    else:
-      naruto.image_c_attack_start.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, 'h',
-                                                     naruto.x, naruto.y, 170, 170)
-
-class MainAttack:
-  @staticmethod
-  def enter(naruto, e):
-    naruto.state_flag = 'MainAttack'
-    naruto.frame = 0
-    naruto.attack_time = get_time()
-
-  @staticmethod
-  def exit(naruto, e):
-    naruto.frame = 0
-
-  @staticmethod
-  def do(naruto):
-    naruto.frame += (FRAMES_PER_ACTION_MA * ACTION_PER_TIME * game_framework.frame_time)
-    if naruto.frame >= 4:  # 4프레임이 지나면 초기화
-      naruto.frame = 0
-    if get_time()-naruto.attack_time > 1.0:
-      # naruto.state_machine.cur_state = FinishAttack
-      naruto.state_machine.add_event(('TIME_OUT', 0))
-
-  @staticmethod
-  def draw(naruto):
-    if naruto.face_dir == 1:
-      naruto.image_c_attack.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, '',
-                                               naruto.x+50, naruto.y+12, 180, 120)
-    else:
-      naruto.image_c_attack.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, 'h',
-                                               naruto.x-50, naruto.y+12, 180, 120)
-
-class FinishAttack:
-  @staticmethod
-  def enter(naruto, e):
-    naruto.state_flag = 'FinishAttack'
-    naruto.frame = 0
-    naruto.attack_flag = False  # 공격 종료
-
-  @staticmethod
-  def exit(naruto, e):
-    naruto.frame = 0
-
-  @staticmethod
-  def do(naruto):
-    naruto.frame += (FRAMES_PER_ACTION_SA * ACTION_PER_TIME * game_framework.frame_time)
-    if naruto.frame >= 4:  # 4프레임이 지나면 Idle 상태로 전환
-      # naruto.state_machine.cur_state = Idle
-      naruto.state_machine.add_event(('FRAME_DONE', 0))
-
-  @staticmethod
-  def draw(naruto):
-    if naruto.face_dir == 1:
-      naruto.image_c_attack_finish.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, '',
-                                                      naruto.x, naruto.y, 150, 150)
-    else:
-      naruto.image_c_attack_finish.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180, 0, 'h',
-                                                      naruto.x, naruto.y, 150, 150)
 
 class ComboAttack1:
   @staticmethod
