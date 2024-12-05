@@ -100,6 +100,10 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
+      if other.face_dir == 1:
+        self.face_dir = -1
+      else:
+        self.face_dir = 1
       self.hit_effect_timer = 0.1
       self.state_machine.add_event(('TAKE_DAMAGE', 0))
 
@@ -452,7 +456,10 @@ class TakeDamage:
       if naruto.hit_effect_timer <= 0:
         naruto.is_hit = False
         naruto.state_machine.add_event(('FRAME_DONE', 0))
-    naruto.x += 0.1
+    if naruto.face_dir == -1:
+      naruto.x += 0.1
+    else:
+      naruto.x -= 0.1
   @staticmethod
   def draw(naruto):
     if naruto.face_dir == 1:

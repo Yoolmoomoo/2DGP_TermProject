@@ -93,14 +93,14 @@ class Luffy:
   def get_bb(self):
     # xld, yld, xru, yru
     if self.state_flag == 'Idle':
-      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
+      return [(0, 0, 0, 0)]
     if self.state_flag == 'Run':
-      return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
+      return [(0, 0, 0, 0)]
     if self.state_flag == 'MainAttack':
       if self.face_dir == 1:
         return [(self.hit_x, self.hit_y, self.hit_x + 100, self.hit_y + 100)]
       else:
-        return [(self.hit_x -60, self.hit_y, self.hit_x - 160, self.hit_y + 100)]
+        return [(self.hit_x -100, self.hit_y, self.hit_x - 10, self.hit_y + 100)]
     if self.state_flag == 'FinishAttack':
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'Jump':
@@ -242,7 +242,11 @@ class StartAttack:
 class MainAttack:
   @staticmethod
   def enter(luffy, e):
-    luffy.hit_x, luffy.hit_y = luffy.x+30, luffy.y-40
+    if luffy.face_dir == 1:
+      luffy.hit_x, luffy.hit_y = luffy.x+30, luffy.y-40
+    else:
+      luffy.hit_x, luffy.hit_y = luffy.x - 30, luffy.y - 40
+
     luffy.state_flag = 'MainAttack'
     luffy.frame = 0
     luffy.hit_num = 8
