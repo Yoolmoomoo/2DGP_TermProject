@@ -13,7 +13,7 @@ class Luffy:
     self.hit_x, self.hit_y = 0, 0
     self.hp = 400
     self.hp_bar = Hp(self.x-380, self.hp)
-    self.damage = 10
+    self.damage = 0.07
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -28,8 +28,6 @@ class Luffy:
     self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
     self.image_jump = load_image('./res/luffy/luffy_jump.png')
     self.hit_num = 0
-    self.hit_sound = load_wav('./res/sound/hit.wav')
-    self.hit_sound.set_volume(32)
     self.state_machine = StateMachine(self)
     self.state_machine.start(Idle)
     self.state_machine.set_transitions(
@@ -133,9 +131,8 @@ class Luffy:
     if group == 'luffy:map':
       pass
     if group == 'luffy:naruto' and self.attack_flag == True:
-      for _ in range(self.hit_num):
-        self.hp -= other.damage
-        self.hit_sound.play()
+      pass
+      # for _ in range(self.hit_num):
 
 
 class Idle:

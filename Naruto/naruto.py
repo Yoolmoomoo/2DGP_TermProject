@@ -13,11 +13,13 @@ class Naruto:
     self.x, self.y = 700, 114
     self.hp = 400
     self.hp_bar = Hp(self.x-20, self.hp)
-    self.damage = 10
+    self.damage = 0.07
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
     self.dir = 0
+    self.hit_sound = load_wav('./res/sound/hit.wav')
+    self.hit_sound.set_volume(32)
     self.is_hit = False
     self.key_states = {SDLK_RIGHT:False, SDLK_LEFT:False}
     self.attack_flag = False
@@ -107,12 +109,13 @@ class Naruto:
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
       self.hp -= other.damage
+      self.hit_sound.play()
       print(self.hp)
       if other.face_dir == 1:
         self.face_dir = -1
       else:
         self.face_dir = 1
-      self.hit_effect_timer = 0.1
+      self.hit_effect_timer = 0.01
       self.state_machine.add_event(('TAKE_DAMAGE', 0))
 
 
