@@ -41,6 +41,11 @@ def c_up(e):
 def next_combo(e):
   return e[0] == 'COMBO_NEXT'
 
+def moving_to_player(e):
+  return e[0] == 'MOVING_TO_PLAYER'
+def reach_to_player(e):
+  return e[0] == 'REACHED_PLAYER'
+
 
 class StateMachine:
   def __init__(self, o):

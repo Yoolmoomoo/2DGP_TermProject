@@ -150,14 +150,7 @@ class Action(Node):
 
     @Node.show_result
     def run(self):
-        result = self.func(*self.args)
-        if isinstance(result, tuple):
-            event, behavior_result = result
-            if self.args:
-             self.args[0].state_machine.add_event(event)
-            self.value = behavior_result
-        else:
-            self.value = result
+        self.value = self.func(*self.args)
         return self.value
 
 
