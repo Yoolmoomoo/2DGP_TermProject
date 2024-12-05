@@ -11,8 +11,9 @@ from state_machine import StateMachine, left_up
 class Naruto:
   def __init__(self):
     self.x, self.y = 700, 114
-    self.hp = 100
-    self.hp_bar = Hp(self.x+190, self.hp)
+    self.hp = 400
+    self.hp_bar = Hp(self.x-20, self.hp)
+    self.damage = 10
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -91,7 +92,7 @@ class Naruto:
 
   def draw(self):
     self.state_machine.draw()
-    self.hp_bar.draw('h')
+    self.hp_bar.draw(self.hp)
     # Collision box
     # draw_rectangle(*self.get_bb())
     # for bb in self.get_bb():
@@ -105,8 +106,8 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
-      damage = 10
-      self.hp -= damage
+      self.hp -= other.damage
+      print(self.hp)
       if other.face_dir == 1:
         self.face_dir = -1
       else:

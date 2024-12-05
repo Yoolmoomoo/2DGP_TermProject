@@ -11,8 +11,9 @@ class Luffy:
   def __init__(self):
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
-    self.hp = 100
-    self.hp_bar = Hp(self.x-190, self.hp)
+    self.hp = 400
+    self.hp_bar = Hp(self.x-380, self.hp)
+    self.damage = 10
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -88,7 +89,7 @@ class Luffy:
 
   def draw(self):
     self.state_machine.draw()
-    self.hp_bar.draw()
+    self.hp_bar.draw(self.hp)
     # Collision box
     # draw_rectangle(*self.get_bb())
     # for bb in self.get_bb():
@@ -132,9 +133,8 @@ class Luffy:
     if group == 'luffy:map':
       pass
     if group == 'luffy:naruto' and self.attack_flag == True:
-      damage = 10
-      self.hp -= damage
       for _ in range(self.hit_num):
+        self.hp -= other.damage
         self.hit_sound.play()
 
 
