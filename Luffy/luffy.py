@@ -13,7 +13,7 @@ class Luffy:
     self.hit_x, self.hit_y = 0, 0
     self.hp = 400
     self.hp_bar = Hp(self.x-380, self.hp)
-    self.damage = 0.07
+    self.damage = 0.1
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
