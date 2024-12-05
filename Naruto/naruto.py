@@ -65,9 +65,9 @@ class Naruto:
     self.build_behavior_tree()
 
   def update(self):
+    self.bt.run()
     self.state_machine.update()
     self.hp_bar.update(self.hp)
-    self.bt.run()
 
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
@@ -121,9 +121,9 @@ class Naruto:
     self.state = 'Walk'
     self.move_slightly_to(play_mode.luffy.x, play_mode.luffy.y)
     if self.distance_less_than(play_mode.luffy.x, play_mode.luffy.y, self.x, self.y, r):
-      return BehaviorTree.SUCCESS
+      return ('REACH_PLAYER', BehaviorTree.SUCCESS)
     else:
-      return BehaviorTree.RUNNING
+      return ('MOVING_TO_PLAYER', BehaviorTree.RUNNING)
 
   def is_nearby(self, distance):
     if self.distance_less_than(play_mode.luffy.x, play_mode.luffy.y, self.x, self.y, distance):
@@ -136,7 +136,7 @@ class Naruto:
     a2 = Action('플레이어에게 접근', self.move_to_player)
     chase_player = Sequence('플레이어 추적', c2, a2)
 
-    root = chase_player
+    root = Selector('행동 루트', chase_player)
 
     self.bt = BehaviorTree(root)
 
@@ -187,38 +187,24 @@ class Run:
   def enter(naruto, e):
     naruto.state_flag = 'Run'
 
-    right_pressed = naruto.key_states.get(SDLK_RIGHT, False)
-    left_pressed = naruto.key_states.get(SDLK_LEFT, False)
-
-    if state_machine.right_down(e) or state_machine.left_up(e):  # 오른쪽으로 RUN
-      naruto.dir, naruto.face_dir = 1, 1
-    elif state_machine.left_down(e) or state_machine.right_up(e):  # 왼쪽으로 RUN
-      naruto.dir, naruto.face_dir = -1, -1
-
-    if right_pressed:
-      naruto.dir, naruto.face_dir = 1, 1
-    if left_pressed:
-      naruto.dir, naruto.face_dir = -1, -1
-
   @staticmethod
   def exit(naruto, e):
     naruto.frame = 0
-    pass
 
   @staticmethod
   def do(naruto):
-
     naruto.frame = (naruto.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
-    naruto.x += naruto.dir * RUN_SPEED_PPS * game_framework.frame_time
+    naruto.move_slightly_to(play_mode.luffy.x, play_mode.luffy.y)
 
   @staticmethod
   def draw(naruto):
     if naruto.face_dir == 1:
       naruto.image_move.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
-                                           0, '', naruto.x, naruto.y, 120, 120)
+                                            0, '', naruto.x, naruto.y, 120, 120)
     else:
       naruto.image_move.clip_composite_draw(int(naruto.frame) * 100, 0, 100, 180,
-                                          0, 'h', naruto.x, naruto.y, 120, 120)
+                                            0, 'h', naruto.x, naruto.y, 120, 120)
+
 
 class ComboAttack1:
   @staticmethod

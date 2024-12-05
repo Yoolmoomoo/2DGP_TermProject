@@ -1,4 +1,5 @@
 
+
 level = 0
 def indent():
     global level
@@ -149,7 +150,14 @@ class Action(Node):
 
     @Node.show_result
     def run(self):
-        self.value = self.func(*self.args)
+        result = self.func(*self.args)
+        if isinstance(result, tuple):
+            event, behavior_result = result
+            if self.args:
+             self.args[0].state_machine.add_event(event)
+            self.value = behavior_result
+        else:
+            self.value = result
         return self.value
 
 
