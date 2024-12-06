@@ -34,13 +34,17 @@ class Naruto:
     self.image_att2 = load_image('./res/naruto/naruto_attack2.png')
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state = 'Idle'
-    self.last_attack1_time = 0.0
-    self.last_attack2_time = 0.0
-    self.att1_cool = 1.0
-    self.att2_cool = 2.0
+    self.last_att1_time = get_time()
+    self.last_att2_time = get_time()
+    self.att1_cool = 0.5
+    self.att2_cool = 1.0
+    self.last_damage_time = 0.0  # 데미지를 받은 마지막 시간을 기록할 변수 추가
+    self.damage_duration = 0.3  # 데미지 상태 지속 시간 (초)
     self.build_behavior_tree()
 
   def update(self):
+    current_time = get_time()
+
     if self.state == 'Idle':
       self.hit_x, self.hit_y = 0, 0
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
@@ -54,11 +58,11 @@ class Naruto:
 
     if self.state == 'TakeDamage':
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
-      if self.is_hit:
-        self.hit_effect_timer -= game_framework.frame_time
-        if self.hit_effect_timer <= 0:
-          self.is_hit = False
-          self.state = 'Idle'
+      if current_time - self.last_damage_time > self.damage_duration:
+        # 일정 시간이 지나면 Idle 상태로 전환
+        self.last_damage_time = current_time
+        self.is_hit = False
+        self.state = 'Idle'
       if self.face_dir == -1:
         self.x += 0.1
       else:
@@ -81,8 +85,6 @@ class Naruto:
         self.face_dir = -1
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 5
 
-    self.att1_cool = max(0.0, self.att1_cool - game_framework.frame_time)
-    self.att2_cool = max(0.0, self.att2_cool - game_framework.frame_time)
     self.hp_bar.update(self.hp)
     self.bt.run()
 
@@ -203,38 +205,42 @@ class Naruto:
     self.state = 'Idle'
     return BehaviorTree.SUCCESS
 
+  def attack1_cooldown_check(self):
+    current_time = get_time()
+    print(current_time)
+    print(self.last_att1_time)
+    print(current_time - self.last_att1_time)
+    if current_time - self.last_att1_time >= self.att1_cool:
+      return BehaviorTree.SUCCESS
+    else:
+      return BehaviorTree.FAIL
+
+  def attack2_cooldown_check(self):
+    if get_time() - self.last_att2_time >= self.att2_cool:
+      return BehaviorTree.SUCCESS
+    else:
+      return BehaviorTree.FAIL
+
   def attack1(self):
     self.state = 'Attack1'
-    self.att1_cool = 1.0  # 공격 쿨타임 설정 (초 단위)
+    self.last_att1_time = get_time()
     return BehaviorTree.SUCCESS
 
   def attack2(self):
     self.state = 'Attack2'
-    self.att2_cool = 5.0  # 공격 쿨타임 설정 (초 단위)
+    self.last_att2_time = get_time()
     return BehaviorTree.SUCCESS
 
-  def attack1_cooldown_check(self):
-    if self.att1_cool <= 0.0:
+  def is_damaged(self):
+    if self.state == 'TakeDamage':
       return BehaviorTree.SUCCESS
-    else:
-      print(self.att1_cool)
-      return BehaviorTree.FAIL
-  def attack2_cooldown_check(self):
-    return BehaviorTree.SUCCESS if self.att2_cool <= 1.0 else BehaviorTree.FAIL
-
-  def take_damage(self):
-    self.state = 'TakeDamage'
-    self.is_hit = True
-    # 데미지 애니메이션이 끝나면
-    if self.frame >= 4:
-      self.state = 'Idle'
-      return BehaviorTree.SUCCESS
-    return BehaviorTree.RUNNING
+    return BehaviorTree.FAIL
 
   def build_behavior_tree(self):
     c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
     c_attack1 = Condition('공격1 쿨타임 확인', self.attack1_cooldown_check)
     c_attack2 = Condition('공격2 쿨타임 확인', self.attack2_cooldown_check)
+    c_is_damaged = Condition('맞았는가?', self.is_damaged)
 
     a1 = Action('공격1 실행', self.attack1)
     a2 = Action('공격2 실행', self.attack2)
@@ -249,7 +255,7 @@ class Naruto:
     a4 = Action('랜덤 위치 결정', self.set_random_location)
     wander = Sequence('방황', a4, a3)
 
-    root = Selector('행동 루트', attack_range, wander)
+    root = Selector('행동 루트', c_is_damaged, attack_range, wander)
 
     self.bt = BehaviorTree(root)
 
