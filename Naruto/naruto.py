@@ -34,10 +34,11 @@ class Naruto:
     self.image_att2 = load_image('./res/naruto/naruto_attack2.png')
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state = 'Idle'
+    self.attack_flag = False
+    self.att1_cool = 0.0001
+    self.att2_cool = 0.0001
     self.last_att1_time = get_time()
     self.last_att2_time = get_time()
-    self.att1_cool = 0.5
-    self.att2_cool = 1.0
     self.last_damage_time = 0.0  # 데미지를 받은 마지막 시간을 기록할 변수 추가
     self.damage_duration = 0.3  # 데미지 상태 지속 시간 (초)
     self.build_behavior_tree()
@@ -46,10 +47,12 @@ class Naruto:
     current_time = get_time()
 
     if self.state == 'Idle':
+      self.attack_flag = False
       self.hit_x, self.hit_y = 0, 0
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
 
     if self.state == 'Walk':
+      self.attack_flag = False
       if self.tx > self.x:
         self.face_dir = 1
       else:
@@ -69,16 +72,21 @@ class Naruto:
         self.x -= 0.1
 
     if self.state == 'Attack1':
+      # self.last_att1_time = get_time()
+      self.attack_flag = True
       if self.tx > self.x:
         self.face_dir = 1
-        self.hit_x, self.hit_y = self.x+30, self.y-40
+        if self.frame >= 3:
+          self.hit_x, self.hit_y = self.x+30, self.y-40
       else:
         self.face_dir = -1
-        self.hit_x, self.hit_y = self.x-30, self.y-40
+        if self.frame >= 3:
+          self.hit_x, self.hit_y = self.x-30, self.y-40
 
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
 
     if self.state == 'Attack2':
+      # self.last_att2_time = get_time()
       if self.tx > self.x:
         self.face_dir = 1
       else:
@@ -89,7 +97,7 @@ class Naruto:
     self.bt.run()
 
   def draw(self):
-    self.marker.draw(self.tx, self.ty)
+    # self.marker.draw(self.tx, self.ty)
     if self.state == 'Idle':
       if self.face_dir == 1:
         self.image_idle.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
@@ -138,8 +146,8 @@ class Naruto:
 
     # Collision box
     # draw_rectangle(*self.get_bb())
-    for bb in self.get_bb():
-      draw_rectangle(*bb)
+    # for bb in self.get_bb():
+    #   draw_rectangle(*bb)
 
   def get_bb(self):
     # xld, yld, xru, yru
@@ -151,9 +159,9 @@ class Naruto:
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state == 'Attack1':
       if self.face_dir == 1:
-        return [(self.hit_x-10, self.hit_y, self.hit_x, self.hit_y+10)]
+        return [(self.hit_x-20, self.hit_y+40, self.hit_x+10, self.hit_y+60)]
       else:
-        return [(self.hit_x -30, self.hit_y, self.hit_x - 10, self.hit_y+10)]
+        return [(self.hit_x-10, self.hit_y+40, self.hit_x+20, self.hit_y+60)]
     if self.state == 'Attack2':
       if self.face_dir == 1:
         return [(self.hit_x-10, self.hit_y, self.hit_x, self.hit_y+10)]
@@ -206,11 +214,7 @@ class Naruto:
     return BehaviorTree.SUCCESS
 
   def attack1_cooldown_check(self):
-    current_time = get_time()
-    print(current_time)
-    print(self.last_att1_time)
-    print(current_time - self.last_att1_time)
-    if current_time - self.last_att1_time >= self.att1_cool:
+    if get_time() - self.last_att1_time >= self.att1_cool:
       return BehaviorTree.SUCCESS
     else:
       return BehaviorTree.FAIL
@@ -223,12 +227,12 @@ class Naruto:
 
   def attack1(self):
     self.state = 'Attack1'
-    self.last_att1_time = get_time()
+    # self.last_att1_time = get_time()
     return BehaviorTree.SUCCESS
 
   def attack2(self):
     self.state = 'Attack2'
-    self.last_att2_time = get_time()
+    # self.last_att2_time = get_time()
     return BehaviorTree.SUCCESS
 
   def is_damaged(self):
