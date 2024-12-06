@@ -13,6 +13,7 @@ class Naruto:
   def __init__(self):
     self.x, self.y = 700, 114
     self.tx, self.ty = 0, self.y
+    self.hit_x, self.hit_y = 0, 0
     self.hp = 400
     self.hp_bar = Hp(self.x-20, self.hp)
     self.damage = 0.1
@@ -33,15 +34,15 @@ class Naruto:
     self.image_att2 = load_image('./res/naruto/naruto_attack2.png')
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state = 'Idle'
-    self.last_time = get_time()
+    self.last_attack1_time = 0.0
+    self.last_attack2_time = 0.0
+    self.att1_cool = 1.0
+    self.att2_cool = 2.0
     self.build_behavior_tree()
 
   def update(self):
     if self.state == 'Idle':
-      # if play_mode.luffy.x > self.x:
-      #   self.face_dir = 1
-      # else:
-      #   self.face_dir = -1
+      self.hit_x, self.hit_y = 0, 0
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
 
     if self.state == 'Walk':
@@ -63,6 +64,25 @@ class Naruto:
       else:
         self.x -= 0.1
 
+    if self.state == 'Attack1':
+      if self.tx > self.x:
+        self.face_dir = 1
+        self.hit_x, self.hit_y = self.x+30, self.y-40
+      else:
+        self.face_dir = -1
+        self.hit_x, self.hit_y = self.x-30, self.y-40
+
+      self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
+
+    if self.state == 'Attack2':
+      if self.tx > self.x:
+        self.face_dir = 1
+      else:
+        self.face_dir = -1
+      self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 5
+
+    self.att1_cool = max(0.0, self.att1_cool - game_framework.frame_time)
+    self.att2_cool = max(0.0, self.att2_cool - game_framework.frame_time)
     self.hp_bar.update(self.hp)
     self.bt.run()
 
@@ -95,6 +115,23 @@ class Naruto:
         self.hit_effect.clip_composite_draw(0, 0, 256, 256,
                                               0, '', self.x, self.y, 70, 70)
 
+    if self.state == 'Attack1':
+      if self.face_dir == 1:
+        self.image_att1.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, '', self.x, self.y, 100, 100)
+      else:
+        self.image_att1.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, 'h', self.x, self.y, 100, 100)
+
+    if self.state == 'Attack2':
+      if self.face_dir == 1:
+        self.image_att2.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                   0, '', self.x, self.y, 100, 100)
+      else:
+        self.image_att2.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                   0, 'h', self.x, self.y, 100, 100)
+
+
     self.hp_bar.draw(self.hp)
 
     # Collision box
@@ -110,7 +147,16 @@ class Naruto:
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
     if self.state == 'TakeDamage':
       return [(self.x - 30, self.y - 40, self.x + 30, self.y + 40)]
-
+    if self.state == 'Attack1':
+      if self.face_dir == 1:
+        return [(self.hit_x-10, self.hit_y, self.hit_x, self.hit_y+10)]
+      else:
+        return [(self.hit_x -30, self.hit_y, self.hit_x - 10, self.hit_y+10)]
+    if self.state == 'Attack2':
+      if self.face_dir == 1:
+        return [(self.hit_x-10, self.hit_y, self.hit_x, self.hit_y+10)]
+      else:
+        return [(self.hit_x -30, self.hit_y, self.hit_x - 10, self.hit_y+10)]
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
@@ -135,7 +181,7 @@ class Naruto:
       self.y = ty
 
   def set_random_location(self):
-    self.tx = random.randint(700, 1000)
+    self.tx = random.randint(100, 1000)
     self.ty = self.y
     return BehaviorTree.SUCCESS
 
@@ -147,8 +193,8 @@ class Naruto:
     else:
       return BehaviorTree.RUNNING
 
-  def is_in_attack_range(self):
-    if self.distance_less_than(play_mode.luffy.x, self.x, 2):
+  def is_in_attack_range(self, d = 2):
+    if self.distance_less_than(play_mode.luffy.x, self.x, d):
         return BehaviorTree.SUCCESS
     else:
         return BehaviorTree.FAIL
@@ -156,6 +202,25 @@ class Naruto:
   def stop_at_attack_range(self):
     self.state = 'Idle'
     return BehaviorTree.SUCCESS
+
+  def attack1(self):
+    self.state = 'Attack1'
+    self.att1_cool = 1.0  # 공격 쿨타임 설정 (초 단위)
+    return BehaviorTree.SUCCESS
+
+  def attack2(self):
+    self.state = 'Attack2'
+    self.att2_cool = 5.0  # 공격 쿨타임 설정 (초 단위)
+    return BehaviorTree.SUCCESS
+
+  def attack1_cooldown_check(self):
+    if self.att1_cool <= 0.0:
+      return BehaviorTree.SUCCESS
+    else:
+      print(self.att1_cool)
+      return BehaviorTree.FAIL
+  def attack2_cooldown_check(self):
+    return BehaviorTree.SUCCESS if self.att2_cool <= 1.0 else BehaviorTree.FAIL
 
   def take_damage(self):
     self.state = 'TakeDamage'
@@ -166,24 +231,25 @@ class Naruto:
       return BehaviorTree.SUCCESS
     return BehaviorTree.RUNNING
 
-  def attack1(self):
-    self.state = 'Attack1'
-    # 공격이 완료되면 Idle 상태로 전환
-    if self.frame >= 4:  # 공격 애니메이션이 끝나면
-      self.state = 'Idle'
-      return BehaviorTree.SUCCESS
-    return BehaviorTree.RUNNING
-
   def build_behavior_tree(self):
-    # c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
-    # a1 = Action('공격 범위 내 멈춤', self.stop_at_attack_range)
-    # attack_range = Sequence('공격 범위', c1, a1)
+    c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
+    c_attack1 = Condition('공격1 쿨타임 확인', self.attack1_cooldown_check)
+    c_attack2 = Condition('공격2 쿨타임 확인', self.attack2_cooldown_check)
 
-    a2 = Action('타겟 위치로 이동', self.move_to, 2)
-    a3 = Action('랜덤 위치 결정', self.set_random_location)
-    wander = Sequence('방황', a3, a2)
+    a1 = Action('공격1 실행', self.attack1)
+    a2 = Action('공격2 실행', self.attack2)
 
-    root = Selector('행동 루트', wander)
+    attack_sequence1 = Sequence('공격1 쿨타임 체크 및 실행', c_attack1, a1)
+    attack_sequence2 = Sequence('공격2 쿨타임 체크 및 실행', c_attack2, a2)
+
+    attack_selector = Selector('공격 선택', attack_sequence1, attack_sequence2)
+    attack_range = Sequence('공격 범위에서 공격', c1, attack_selector)
+
+    a3 = Action('타겟 위치로 이동', self.move_to, 2)
+    a4 = Action('랜덤 위치 결정', self.set_random_location)
+    wander = Sequence('방황', a4, a3)
+
+    root = Selector('행동 루트', attack_range, wander)
 
     self.bt = BehaviorTree(root)
 
