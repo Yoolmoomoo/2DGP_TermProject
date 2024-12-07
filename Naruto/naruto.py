@@ -16,7 +16,7 @@ class Naruto:
     self.hit_x, self.hit_y = 0, 0
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
-    self.hp_bar = Hp(self.x-20, self.hp)
+    self.hp_bar = Hp(self.x-115, self.hp)
     self.damage = 0.1
     self.action = 1
     self.face_dir = -1
@@ -42,6 +42,7 @@ class Naruto:
     self.last_att2_time = get_time()
     self.last_damage_time = 0.0  # 데미지를 받은 마지막 시간을 기록할 변수 추가
     self.damage_duration = 0.3  # 데미지 상태 지속 시간 (초)
+    self.last_time = get_time()
     self.build_behavior_tree()
 
   def update(self):
@@ -61,6 +62,7 @@ class Naruto:
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
 
     if self.state == 'TakeDamage':
+      self.hit_sound.play()
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
       if current_time - self.last_damage_time > self.damage_duration:
         # 일정 시간이 지나면 Idle 상태로 전환
@@ -174,7 +176,6 @@ class Naruto:
     if group == 'luffy:naruto' and other.attack_flag == True:
       self.attack_flag = False
       self.hp -= other.damage
-      self.hit_sound.play()
       if other.face_dir == 1:
         self.face_dir = -1
       else:

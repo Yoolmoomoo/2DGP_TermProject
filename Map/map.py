@@ -14,8 +14,8 @@ class Map:
 
     def draw(self):
         self.image.draw(600, 400)
-        self.luffy_coma.draw(462, 750, 80, 80)
-        self.naruto_coma.draw(638, 750, 80, 80)
+        self.luffy_coma.draw(get_canvas_width()/2-45, get_canvas_height()-60, 80, 80)
+        self.naruto_coma.draw(get_canvas_width()/2+45, get_canvas_height()-60, 80, 80)
         # self.image.draw(1200, 30)
 
     def get_bb(self):

@@ -13,7 +13,7 @@ def resume():
   pass
 
 def init():
-  open_canvas(1100, 800)
+  open_canvas(1000, 700) # 1000 700
   global luffy, naruto
 
   map = Map()

@@ -14,7 +14,7 @@ class Luffy:
     self.hit_x, self.hit_y = 0, 0
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
-    self.hp_bar = Hp(self.x-380, self.hp)
+    self.hp_bar = Hp(self.x-387, self.hp)
     self.damage = 0.3
     self.action = 1
     self.face_dir = 1
@@ -100,7 +100,7 @@ class Luffy:
   def draw(self):
     self.state_machine.draw()
     self.font.draw(self.x-31, self.y+50, f'Player', (0,0,255))
-    self.hp_bar.draw(self.hp)
+    self.hp_bar.draw(self.hp, left_flag = True)
     # Collision box
     # draw_rectangle(*self.get_bb())
     # for bb in self.get_bb():
