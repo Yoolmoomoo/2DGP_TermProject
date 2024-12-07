@@ -19,7 +19,7 @@ class Naruto:
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-115, self.hp)
-    self.damage = 0.1
+    self.damage = 0.3
     self.action = 1
     self.face_dir = -1
     self.combo_flag = False
@@ -129,10 +129,10 @@ class Naruto:
 
   def draw(self):
     # self.marker.draw(self.tx, self.ty)
-    self.font.draw(self.x, self.y + 200, f'{self.state}', (255, 0, 0))
-    self.font.draw(self.x, self.y + 150, f'{self.attack_flag}', (255, 0, 0))
-    self.font.draw(self.x, self.y + 100, f'{self.frame}', (255,0,0))
-    self.font.draw(self.x, self.y + 50, f'PC', (255, 0, 0))
+    # self.font.draw(self.x, self.y + 200, f'{self.state}', (255, 0, 0))
+    # self.font.draw(self.x, self.y + 150, f'{self.attack_flag}', (255, 0, 0))
+    # self.font.draw(self.x, self.y + 100, f'{self.frame}', (255,0,0))
+    self.font.draw(self.x-10, self.y + 50, f'PC', (255, 0, 0))
     if self.state == 'Idle':
       if self.face_dir == 1:
         self.image_idle.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
@@ -252,7 +252,7 @@ class Naruto:
     else:
       return BehaviorTree.RUNNING
 
-  def is_in_attack_range(self, d = 3):
+  def is_in_attack_range(self, d = 2.5):
     if self.distance_less_than(play_mode.luffy.x, self.x, d):
         self.attack_flag = True
         return BehaviorTree.SUCCESS

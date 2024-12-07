@@ -14,9 +14,10 @@ def resume():
 
 def init():
   open_canvas(1000, 700) # 1000 700
-  global luffy, naruto, play_mode_end, end_time, map, load_flag, start_time, ai_time
+  global luffy, naruto, play_mode_end, end_time, map, load_flag, start_time, ai_time, win_flag
 
   load_flag = False
+  win_flag = -1
   play_mode_end = False
   end_time = 0
 
@@ -51,11 +52,11 @@ def handle_events():
 
 
 def update():
-  global play_mode_end, end_time
+  global play_mode_end, end_time, win_flag
   game_world.update()
   game_world.handle_collisions() ##### 충돌 감지 #####
 
-  if play_mode_end == True and get_time()-end_time > 3.0:
+  if play_mode_end == True and get_time()-end_time > 5.0:
     game_framework.change_mode(over_mode)
     pass
 
@@ -63,6 +64,8 @@ def update():
     luffy.state_machine.add_event(('WIN', 0))
     end_time = get_time()
     play_mode_end = True
+    if win_flag == -1:
+      win_flag = 1
 
 
 def draw():

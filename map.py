@@ -1,4 +1,7 @@
+from sys import platlibdir
+
 from pico2d import *
+import play_mode
 
 class Map:
     def __init__(self):
@@ -10,6 +13,12 @@ class Map:
         self.bgm.repeat_play()
 
     def update(self):
+        if play_mode.win_flag == 1:
+            self.bgm.stop()
+            self.win_sound = load_music('./res/sound/win.mp3')
+            self.win_sound.set_volume(32)
+            self.win_sound.play()
+            play_mode.win_flag = 0
         pass
 
     def draw(self):
