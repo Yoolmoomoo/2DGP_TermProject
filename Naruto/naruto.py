@@ -13,9 +13,11 @@ class Naruto:
   def __init__(self):
     self.x, self.y = 700, 114
     self.tx, self.ty = 0, self.y
+    self.flying_x = 0
+    self.flying_y = 0
     self.hit_x, self.hit_y = 0, 0
     self.font = load_font('./res/font/D2Coding.TTF', 20)
-    self.hp = 400
+    self.hp = 200
     self.hp_bar = Hp(self.x-115, self.hp)
     self.damage = 0.1
     self.action = 1
@@ -33,6 +35,8 @@ class Naruto:
     self.image_move = load_image('./res/naruto/naruto_move.png')
     self.image_att1 = load_image('./res/naruto/naruto_attack1.png')
     self.image_att2 = load_image('./res/naruto/naruto_attack2.png')
+    self.image_win = load_image('./res/naruto/naruto_win.png')
+    self.image_lose = load_image('./res/naruto/naruto_lose.png')
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state = 'Idle'
     self.attack_flag = False
@@ -99,9 +103,28 @@ class Naruto:
     self.hp_bar.update(self.hp)
     self.bt.run()
 
+    if self.state == 'Win':
+      pass
+
+    if self.state == 'Lose':
+      if self.hp <= 0:
+        self.hp = 0
+
+      if self.flying_x <= 5:
+        self.flying_x += 0.1
+        if self.face_dir == 1:
+          self.x -= self.flying_x
+        else:
+          self.x += self.flying_x
+
+      self.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
+
+      self.hp_bar.update(self.hp)
+
   def draw(self):
     # self.marker.draw(self.tx, self.ty)
     self.font.draw(self.x, self.y + 50, f'PC', (255, 0, 0))
+    self.font.draw(self.x, self.y + 100, f'HP: {self.hp}', (255, 0, 0))
     if self.state == 'Idle':
       if self.face_dir == 1:
         self.image_idle.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
@@ -145,6 +168,17 @@ class Naruto:
         self.image_att2.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
                                                    0, 'h', self.x, self.y, 100, 100)
 
+    if self.state == 'Lose':
+      if self.frame >= 6:
+        self.frame = 6
+
+      if self.face_dir == 1:
+        self.image_lose.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, '', self.x, self.y-30, 120, 120)
+      else:
+        self.image_lose.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
+                                                     0, 'h', self.x, self.y-30, 120, 120)
+
 
     self.hp_bar.draw(self.hp)
 
@@ -171,6 +205,8 @@ class Naruto:
         return [(self.hit_x-10, self.hit_y, self.hit_x, self.hit_y+10)]
       else:
         return [(self.hit_x -30, self.hit_y, self.hit_x - 10, self.hit_y+10)]
+    if self.state == 'Lose':
+      return[(0,0,0,0)]
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
@@ -245,6 +281,15 @@ class Naruto:
       return BehaviorTree.SUCCESS
     return BehaviorTree.FAIL
 
+  def is_dead(self):
+    if self.hp <= 0:
+      return BehaviorTree.SUCCESS
+    return BehaviorTree.FAIL
+
+  def stop_behavior_tree(self):
+    self.state = 'Lose'
+    return BehaviorTree.SUCCESS
+
   def build_behavior_tree(self):
     c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
     c_attack1 = Condition('공격1 쿨타임 확인', self.attack1_cooldown_check)
@@ -264,7 +309,11 @@ class Naruto:
     a4 = Action('랜덤 위치 결정', self.set_random_location)
     wander = Sequence('방황', a4, a3)
 
-    root = Selector('행동 루트', c_is_damaged, attack_range, wander)
+    c_dead = Condition('죽었는가?', self.is_dead)
+    a_stop_bt = Action('행동 트리 멈춤', self.stop_behavior_tree)
+    is_lost = Sequence('패배', c_dead, a_stop_bt)
+
+    root = Selector('행동 루트', is_lost, c_is_damaged, attack_range, wander)
 
     self.bt = BehaviorTree(root)
 
