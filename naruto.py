@@ -29,7 +29,6 @@ class Naruto:
     self.is_hit = False
     self.attack_flag = False
     self.frame = 0
-    self.marker = load_image('hand_arrow.png')
     self.image_idle = load_image('./res/naruto/naruto_idle.png')
     self.image_take_damage = load_image('./res/naruto/naruto_take_damage.png')
     self.image_move = load_image('./res/naruto/naruto_move.png')
