@@ -14,6 +14,7 @@ class Naruto:
     self.x, self.y = 700, 114
     self.tx, self.ty = 0, self.y
     self.hit_x, self.hit_y = 0, 0
+    self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-20, self.hp)
     self.damage = 0.1
@@ -98,6 +99,7 @@ class Naruto:
 
   def draw(self):
     # self.marker.draw(self.tx, self.ty)
+    self.font.draw(self.x, self.y + 50, f'PC', (255, 0, 0))
     if self.state == 'Idle':
       if self.face_dir == 1:
         self.image_idle.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
@@ -170,6 +172,7 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
+      self.attack_flag = False
       self.hp -= other.damage
       self.hit_sound.play()
       if other.face_dir == 1:
@@ -203,7 +206,7 @@ class Naruto:
     else:
       return BehaviorTree.RUNNING
 
-  def is_in_attack_range(self, d = 2):
+  def is_in_attack_range(self, d = 3):
     if self.distance_less_than(play_mode.luffy.x, self.x, d):
         return BehaviorTree.SUCCESS
     else:

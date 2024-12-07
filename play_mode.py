@@ -14,7 +14,7 @@ def resume():
 
 def init():
   open_canvas(1100, 800)
-  global luffy
+  global luffy, naruto
 
   map = Map()
   game_world.add_object(map,0)

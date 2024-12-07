@@ -6,11 +6,13 @@ import state_machine
 import game_framework
 from state_machine import StateMachine
 from hp import Hp
+import play_mode
 
 class Luffy:
   def __init__(self):
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
+    self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-380, self.hp)
     self.damage = 0.3
@@ -97,6 +99,7 @@ class Luffy:
 
   def draw(self):
     self.state_machine.draw()
+    self.font.draw(self.x-31, self.y+50, f'Player', (0,0,255))
     self.hp_bar.draw(self.hp)
     # Collision box
     # draw_rectangle(*self.get_bb())
@@ -284,7 +287,6 @@ class MainAttack:
     if luffy.frame >= 4:  # 4프레임이 지나면 초기화
       luffy.frame = 0
     if get_time()-luffy.attack_time > 1.0:
-      # luffy.state_machine.cur_state = FinishAttack
       luffy.state_machine.add_event(('TIME_OUT', 0))
 
   @staticmethod
@@ -502,7 +504,7 @@ class TakeDamage:
   def do(luffy):
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
     luffy.hit_sound.play()
-    if luffy.face_dir == -1:
+    if play_mode.naruto.x <= luffy.x:
       luffy.x += 0.1
     else:
       luffy.x -= 0.1
