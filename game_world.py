@@ -6,7 +6,7 @@ def add_object(o, depth = 0):
   world[depth].append(o)
 
 def add_objects(ol, depth = 0):
-  world[depth].append += ol
+  world[depth] += ol
 
 def remove_object(o):
   for layer in world:

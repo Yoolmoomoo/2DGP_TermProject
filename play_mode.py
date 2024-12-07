@@ -3,7 +3,7 @@ import game_framework
 import random
 
 import game_world
-from Map.map import Map
+from Map.map import Map, Ground
 from Luffy.luffy import Luffy
 from Naruto.naruto import Naruto
 
@@ -19,11 +19,14 @@ def init():
   map = Map()
   game_world.add_object(map,0)
 
-  luffy = Luffy()
-  game_world.add_object(luffy, 2)
+  grounds = [Ground(x*70) for x in range(15)]
+  game_world.add_objects(grounds, 1)
 
   naruto = Naruto()
-  game_world.add_object(naruto, 1)
+  game_world.add_object(naruto, 2)
+
+  luffy = Luffy()
+  game_world.add_object(luffy, 2)
 
   ##### 충돌 페어 등록 #####
   game_world.add_collision_pair('luffy:map', luffy, map)

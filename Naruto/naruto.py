@@ -235,9 +235,10 @@ class Naruto:
     return BehaviorTree.SUCCESS
 
   def attack2(self):
-    self.state = 'Attack2'
-    # self.last_att2_time = get_time()
-    return BehaviorTree.SUCCESS
+    if self.frame >= 4:
+      self.state = 'Attack2'
+      # self.last_att2_time = get_time()
+      return BehaviorTree.SUCCESS
 
   def is_damaged(self):
     if self.state == 'TakeDamage':
@@ -256,7 +257,7 @@ class Naruto:
     attack_sequence1 = Sequence('공격1 쿨타임 체크 및 실행', c_attack1, a1)
     attack_sequence2 = Sequence('공격2 쿨타임 체크 및 실행', c_attack2, a2)
 
-    attack_selector = Selector('공격 선택', attack_sequence1, attack_sequence2)
+    attack_selector = Sequence('공격 선택', attack_sequence1, attack_sequence2)
     attack_range = Sequence('공격 범위에서 공격', c1, attack_selector)
 
     a3 = Action('타겟 위치로 이동', self.move_to, 2)

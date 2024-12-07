@@ -25,3 +25,22 @@ class Map:
     def handle_collision(self, group, other):
         pass
 
+class Ground:
+    def __init__(self, x):
+        self.x = x
+        self.y = 35
+        self.ground = load_image('./res/map/ground.png')
+
+    def update(self):
+        pass
+
+    def draw(self):
+        self.ground.draw(self.x, self.y, 130, 250)
+        # self.image.draw(1200, 30)
+
+    def get_bb(self):
+        # fill here
+        pass
+
+    def handle_collision(self, group, other):
+        pass
