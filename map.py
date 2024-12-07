@@ -3,9 +3,9 @@ from pico2d import *
 class Map:
     def __init__(self):
         self.image = load_image('./res/map/map.png')
-        self.bgm = load_music('./res/sound/battle.mp3')
         self.luffy_coma = load_image('./res/luffy/luffy_coma.png')
         self.naruto_coma = load_image('./res/naruto/naruto_coma.png')
+        self.bgm = load_music('./res/sound/battle.mp3')
         self.bgm.set_volume(32)
         self.bgm.repeat_play()
 

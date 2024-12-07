@@ -46,6 +46,9 @@ def moving_to_player(e):
 def reach_to_player(e):
   return e[0] == 'REACHED_PLAYER'
 
+def win(e):
+  return e[0] == 'WIN'
+
 
 class StateMachine:
   def __init__(self, o):

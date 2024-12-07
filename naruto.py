@@ -17,7 +17,7 @@ class Naruto:
     self.flying_y = 0
     self.hit_x, self.hit_y = 0, 0
     self.font = load_font('./res/font/D2Coding.TTF', 20)
-    self.hp = 200
+    self.hp = 1
     self.hp_bar = Hp(self.x-115, self.hp)
     self.damage = 0.1
     self.action = 1
@@ -66,7 +66,6 @@ class Naruto:
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
 
     if self.state == 'TakeDamage':
-      self.hit_sound.play()
       self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
       if current_time - self.last_damage_time > self.damage_duration:
         # 일정 시간이 지나면 Idle 상태로 전환
@@ -124,7 +123,6 @@ class Naruto:
   def draw(self):
     # self.marker.draw(self.tx, self.ty)
     self.font.draw(self.x, self.y + 50, f'PC', (255, 0, 0))
-    self.font.draw(self.x, self.y + 100, f'HP: {self.hp}', (255, 0, 0))
     if self.state == 'Idle':
       if self.face_dir == 1:
         self.image_idle.clip_composite_draw(int(self.frame) * 100, 0, 100, 180,
@@ -210,6 +208,7 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
+      self.hit_sound.play()
       self.attack_flag = False
       self.hp -= other.damage
       if other.face_dir == 1:

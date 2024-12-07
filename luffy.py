@@ -16,6 +16,7 @@ class Luffy:
     self.hp = 400
     self.hp_bar = Hp(self.x-387, self.hp)
     self.damage = 0.3
+    self.state_flag = 'Idle'
     self.action = 1
     self.face_dir = 1
     self.combo_flag = False
@@ -30,11 +31,10 @@ class Luffy:
     self.image_x_attack = load_image('./res/luffy/luffy_x_attack.png')
     self.image_jump = load_image('./res/luffy/luffy_jump.png')
     self.image_take_damage = load_image('./res/luffy/luffy_take_damage.png')
+    self.image_win = load_image('./res/luffy/luffy_win.png')
     self.image_hit_effect = load_image('./res/luffy/hit_effect.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
-    self.run_sound = load_wav('./res/sound/run.wav')
     self.hit_sound.set_volume(32)
-    self.run_sound.set_volume(20)
     self.is_hit = False
     self.hit_num = 0
     self.state_machine = StateMachine(self)
@@ -52,6 +52,7 @@ class Luffy:
                 state_machine.left_held: Run,
                 state_machine.both_held: Idle,
                 state_machine.take_damage: TakeDamage,
+                state_machine.win: Win,
                },
         Run : {state_machine.right_down : Idle,
                 state_machine.left_down : Idle,
@@ -63,6 +64,7 @@ class Luffy:
                state_machine.frame_done: Idle,
                state_machine.both_held: Idle,
                state_machine.take_damage: TakeDamage,
+               state_machine.win: Win,
               },
         StartAttack: {state_machine.frame_done: MainAttack},
         MainAttack: {state_machine.time_out: FinishAttack,
@@ -77,8 +79,11 @@ class Luffy:
         ComboAttack2: {state_machine.frame_done: Idle,
                        state_machine.next_combo: ComboAttack3},
         ComboAttack3: {state_machine.frame_done: Idle},
-        Jump: {state_machine.landed: Idle},
-        TakeDamage: {state_machine.frame_done: Idle},
+        Jump: {state_machine.landed: Idle,
+               state_machine.win: Win,},
+        TakeDamage: {state_machine.frame_done: Idle,
+                     state_machine.win: Win,},
+        Win: {state_machine.win: Win,}
       }
     )
 
@@ -140,7 +145,8 @@ class Luffy:
         return [(self.hit_x - 205, self.hit_y, self.hit_x - 60, self.hit_y + 35)]
     if self.state_flag == 'TakeDamage':
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
-
+    if self.state_flag == 'Win':
+      return [(0,0,0,0)]
 
   def handle_collision(self, group, other):
     if group == 'luffy:map':
@@ -220,7 +226,7 @@ class Run:
 
   @staticmethod
   def do(luffy):
-    luffy.run_sound.play()
+    # luffy.run_sound.play()
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
     luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 
@@ -524,3 +530,23 @@ class TakeDamage:
       luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
                                                   luffy.x, luffy.y, 50, 50)
 
+class Win:
+  @staticmethod
+  def enter(luffy, e):
+    luffy.state_flag = 'Win'
+    luffy.attack_flag = False
+    luffy.is_hit = False
+    luffy.current_time = get_time()
+
+  @staticmethod
+  def exit(luffy, e):
+    luffy.state_machine.add_event(('WIN', 0))
+    pass
+  @staticmethod
+  def do(luffy):
+    luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
+
+  @staticmethod
+  def draw(luffy):
+    luffy.image_win.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                         luffy.x, luffy.y, 100, 100)
