@@ -30,7 +30,9 @@ class Luffy:
     self.image_take_damage = load_image('./res/luffy/luffy_take_damage.png')
     self.image_hit_effect = load_image('./res/luffy/hit_effect.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
+    self.run_sound = load_wav('./res/sound/run.wav')
     self.hit_sound.set_volume(32)
+    self.run_sound.set_volume(20)
     self.is_hit = False
     self.hit_num = 0
     self.state_machine = StateMachine(self)
@@ -215,7 +217,7 @@ class Run:
 
   @staticmethod
   def do(luffy):
-
+    luffy.run_sound.play()
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
     luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 

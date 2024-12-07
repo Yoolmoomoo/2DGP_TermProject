@@ -1,9 +1,11 @@
 from pico2d import *
-from res.map import *
 
 class Map:
     def __init__(self):
         self.image = load_image('./res/map/map.png')
+        self.bgm = load_music('./res/sound/battle.mp3')
+        self.bgm.set_volume(32)
+        self.bgm.repeat_play()
 
     def update(self):
         pass
