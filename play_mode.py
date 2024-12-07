@@ -2,7 +2,7 @@ from pico2d import *
 import game_framework
 
 import game_world
-import over_mode, title_mode
+import over_mode, title_mode, loading_mode
 from map import Map, Ground
 from luffy import Luffy
 from naruto import Naruto
@@ -14,8 +14,9 @@ def resume():
 
 def init():
   open_canvas(1000, 700) # 1000 700
-  global luffy, naruto, play_mode_end, end_tim, map
+  global luffy, naruto, play_mode_end, end_time, map, load_flag, start_time, ai_time
 
+  load_flag = False
   play_mode_end = False
   end_time = 0
 
@@ -35,6 +36,9 @@ def init():
   game_world.add_collision_pair('luffy:map', luffy, map)
   game_world.add_collision_pair('luffy:naruto', luffy, naruto)
 
+  start_time = get_time()
+  ai_time = get_time()
+
 def handle_events():
   events = get_events()
   for event in events:
@@ -51,8 +55,8 @@ def update():
   game_world.update()
   game_world.handle_collisions() ##### 충돌 감지 #####
 
-  if play_mode_end == True and get_time()-end_time > 1.5:
-    game_framework.change_mode(title_mode)
+  if play_mode_end == True and get_time()-end_time > 3.0:
+    game_framework.change_mode(over_mode)
     pass
 
   if naruto.hp <= 0 and luffy.state_flag != 'Win':
@@ -62,9 +66,12 @@ def update():
 
 
 def draw():
+  global load_flag, start_time
   clear_canvas()
   game_world.render()
-  # if load_flag == False:
+  if load_flag == False:
+    game_framework.push_mode(loading_mode)
+    load_flag = True
 
   update_canvas()
 

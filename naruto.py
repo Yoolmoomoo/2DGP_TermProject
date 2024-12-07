@@ -17,7 +17,7 @@ class Naruto:
     self.flying_y = 0
     self.hit_x, self.hit_y = 0, 0
     self.font = load_font('./res/font/D2Coding.TTF', 20)
-    self.hp = 1
+    self.hp = 400
     self.hp_bar = Hp(self.x-115, self.hp)
     self.damage = 0.1
     self.action = 1
@@ -40,8 +40,8 @@ class Naruto:
     self.hit_effect = load_image('./res/naruto/hit_effect.png')
     self.state = 'Idle'
     self.attack_flag = False
-    self.att1_cool = 0.0001
-    self.att2_cool = 0.0001
+    self.att1_cool = 3.0
+    self.att2_cool = 3.0
     self.last_att1_time = get_time()
     self.last_att2_time = get_time()
     self.last_damage_time = 0.0  # 데미지를 받은 마지막 시간을 기록할 변수 추가
@@ -89,7 +89,10 @@ class Naruto:
         if self.frame >= 3:
           self.hit_x, self.hit_y = self.x-30, self.y-40
 
-      self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 4
+      self.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
+      if self.frame >= 4:
+        self.frame  = 0
+        self.attack_flag = False
 
     if self.state == 'Attack2':
       # self.last_att2_time = get_time()
@@ -97,7 +100,11 @@ class Naruto:
         self.face_dir = 1
       else:
         self.face_dir = -1
-      self.frame = (self.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 5
+      self.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
+
+      if self.frame >= 5:
+        self.frame = 0
+        self.attack_flag = False
 
     self.hp_bar.update(self.hp)
     self.bt.run()
@@ -122,6 +129,9 @@ class Naruto:
 
   def draw(self):
     # self.marker.draw(self.tx, self.ty)
+    self.font.draw(self.x, self.y + 200, f'{self.state}', (255, 0, 0))
+    self.font.draw(self.x, self.y + 150, f'{self.attack_flag}', (255, 0, 0))
+    self.font.draw(self.x, self.y + 100, f'{self.frame}', (255,0,0))
     self.font.draw(self.x, self.y + 50, f'PC', (255, 0, 0))
     if self.state == 'Idle':
       if self.face_dir == 1:
@@ -244,8 +254,10 @@ class Naruto:
 
   def is_in_attack_range(self, d = 3):
     if self.distance_less_than(play_mode.luffy.x, self.x, d):
+        self.attack_flag = True
         return BehaviorTree.SUCCESS
     else:
+        self.attack_flag = False
         return BehaviorTree.FAIL
 
   def stop_at_attack_range(self):
@@ -253,26 +265,29 @@ class Naruto:
     return BehaviorTree.SUCCESS
 
   def attack1_cooldown_check(self):
-    if get_time() - self.last_att1_time >= self.att1_cool:
-      return BehaviorTree.SUCCESS
-    else:
-      return BehaviorTree.FAIL
+    if self.attack_flag == False: return BehaviorTree.FAIL
+    # if get_time() - play_mode.ai_time >= self.att1_cool:
+    #   return BehaviorTree.SUCCESS
+    # else:
+    #   return BehaviorTree.FAIL
+    return BehaviorTree.SUCCESS
 
   def attack2_cooldown_check(self):
-    if get_time() - self.last_att2_time >= self.att2_cool:
-      return BehaviorTree.SUCCESS
-    else:
-      return BehaviorTree.FAIL
+    if self.attack_flag == False: return BehaviorTree.FAIL
+    # if get_time() - play_mode.ai_time >= self.att2_cool:
+    #   return BehaviorTree.SUCCESS
+    # else:
+    #   return BehaviorTree.FAIL
+    return BehaviorTree.SUCCESS
 
   def attack1(self):
     self.state = 'Attack1'
-    # self.last_att1_time = get_time()
+    play_mode.ai_time = get_time()
     return BehaviorTree.SUCCESS
 
   def attack2(self):
-    if self.frame >= 4:
       self.state = 'Attack2'
-      # self.last_att2_time = get_time()
+      play_mode.ai_time = get_time()
       return BehaviorTree.SUCCESS
 
   def is_damaged(self):
@@ -289,6 +304,11 @@ class Naruto:
     self.state = 'Lose'
     return BehaviorTree.SUCCESS
 
+  def is_not_attacking(self):
+    if self.attack_flag == False:
+      return BehaviorTree.SUCCESS
+    return BehaviorTree.FAIL
+
   def build_behavior_tree(self):
     c1 = Condition('플레이어가 공격 범위 안에 있는가?', self.is_in_attack_range)
     c_attack1 = Condition('공격1 쿨타임 확인', self.attack1_cooldown_check)
@@ -301,12 +321,13 @@ class Naruto:
     attack_sequence1 = Sequence('공격1 쿨타임 체크 및 실행', c_attack1, a1)
     attack_sequence2 = Sequence('공격2 쿨타임 체크 및 실행', c_attack2, a2)
 
-    attack_selector = Sequence('공격 선택', attack_sequence1, attack_sequence2)
+    attack_selector = Selector('공격 선택', attack_sequence1, attack_sequence2)
     attack_range = Sequence('공격 범위에서 공격', c1, attack_selector)
 
+    c_is_not_attacking = Action('공격중인가', self.is_not_attacking)
     a3 = Action('타겟 위치로 이동', self.move_to, 2)
     a4 = Action('랜덤 위치 결정', self.set_random_location)
-    wander = Sequence('방황', a4, a3)
+    wander = Sequence('방황', c_is_not_attacking, a4, a3)
 
     c_dead = Condition('죽었는가?', self.is_dead)
     a_stop_bt = Action('행동 트리 멈춤', self.stop_behavior_tree)

@@ -1,14 +1,19 @@
+from pygame.examples.chimp import load_sound
+
 import game_framework
-from pico2d import load_image, get_events, update_canvas, clear_canvas, close_canvas, open_canvas, load_wav, delay
+from pico2d import *
 from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE, SDL_MouseButtonEvent
 import play_mode
 
 def init():
   open_canvas(512, 768)
-  global image, click_sound
+  global image, click_sound, opening_sound
   image = load_image('./res/map/title.png')
   click_sound = load_wav('./res/sound/click.wav')
   click_sound.set_volume(80)
+  opening_sound = load_music('./res/sound/opening.mp3')
+  opening_sound.set_volume(32)
+  opening_sound.play()
 
 
 def finish():

@@ -1,3 +1,5 @@
+from pico2d import get_time
+import play_mode
 
 level = 0
 def indent():
@@ -149,6 +151,8 @@ class Action(Node):
 
     @Node.show_result
     def run(self):
+        if get_time() - play_mode.start_time < 3.0:
+            return -1
         self.value = self.func(*self.args)
         return self.value
 

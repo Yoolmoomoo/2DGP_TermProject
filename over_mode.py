@@ -1,7 +1,7 @@
 import game_framework
-from pico2d import load_image, get_events, update_canvas, clear_canvas, close_canvas, open_canvas, load_wav, delay
+from pico2d import *
 from sdl2 import SDL_QUIT, SDL_KEYDOWN, SDLK_ESCAPE, SDLK_SPACE, SDL_MouseButtonEvent, SDLK_r
-import play_mode
+import play_mode, title_mode
 
 def init():
   open_canvas(512, 768)
@@ -9,6 +9,9 @@ def init():
   image = load_image('./res/map/title.png')
   click_sound = load_wav('./res/sound/click.wav')
   click_sound.set_volume(80)
+  # opening_sound = load_music('./res/sound/opening.mp3')
+  title_mode.opening_sound.set_volume(32)
+  title_mode.opening_sound.play()
 
 
 def finish():
