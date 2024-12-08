@@ -10,8 +10,11 @@ import play_mode
 
 class Luffy:
   def __init__(self):
+    self.gear_flag = False
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
+    self.w = 100
+    self.h = 100
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-387, self.hp)
@@ -33,6 +36,7 @@ class Luffy:
     self.image_take_damage = load_image('./res/luffy/luffy_take_damage.png')
     self.image_win = load_image('./res/luffy/luffy_win.png')
     self.image_hit_effect = load_image('./res/luffy/hit_effect.png')
+    self.image_gear = load_image('./res/luffy/luffy_gear.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
     self.hit_sound.set_volume(32)
     self.is_hit = False
@@ -53,6 +57,7 @@ class Luffy:
                 state_machine.both_held: Idle,
                 state_machine.take_damage: TakeDamage,
                 state_machine.win: Win,
+                state_machine.gear: Gear,
                },
         Run : {state_machine.right_down : Idle,
                 state_machine.left_down : Idle,
@@ -83,7 +88,8 @@ class Luffy:
                state_machine.win: Win,},
         TakeDamage: {state_machine.frame_done: Idle,
                      state_machine.win: Win,},
-        Win: {state_machine.win: Win,}
+        Win: {state_machine.win: Win,},
+        Gear: {state_machine.complete_transition: Idle}
       }
     )
 
@@ -99,6 +105,8 @@ class Luffy:
       self.combo_flag = True
     elif self.state_flag == 'ComboAttack2' and event.type == SDL_KEYDOWN and event.key is SDLK_x:
       self.combo_flag = True
+    elif self.state_flag == 'Idle' and event.type == SDL_KEYDOWN and event.key is SDLK_g:
+      self.state_machine.add_event(('GEAR', 0))
 
     self.state_machine.add_event(('INPUT', event))
 
@@ -108,15 +116,17 @@ class Luffy:
     self.hp_bar.draw(self.hp, left_flag = True)
     # Collision box
     # draw_rectangle(*self.get_bb())
-    # for bb in self.get_bb():
-    #   draw_rectangle(*bb)
+    for bb in self.get_bb():
+      draw_rectangle(*bb)
 
   def get_bb(self):
     # xld, yld, xru, yru
+    if self.state_flag == 'None':
+      return [(0, 0, 0, 0)]
     if self.state_flag == 'Idle':
       return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'Run':
-      return [(0, 0, 0, 0)]
+      return [(self.x-30, self.y-40, self.x+30, self.y+40)]
     if self.state_flag == 'MainAttack':
       if self.face_dir == 1:
         return [(self.hit_x, self.hit_y, self.hit_x + 100, self.hit_y + 100)]
@@ -149,12 +159,12 @@ class Luffy:
       return [(0,0,0,0)]
 
   def handle_collision(self, group, other):
+    if self.state_flag == 'None': return
     if group == 'luffy:map':
       pass
     if group == 'luffy:naruto' and other.attack_flag == True:
       self.state_machine.add_event(('TAKE_DAMAGE', 0))
       self.hp -= other.damage
-      pass
       # for _ in range(self.hit_num):
 
 
@@ -550,3 +560,39 @@ class Win:
   def draw(luffy):
     luffy.image_win.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
                                          luffy.x, luffy.y, 100, 100)
+
+class Gear:
+  @staticmethod
+  def enter(luffy, e):
+    luffy.state_flag = 'None'
+    luffy.gear_flag = True
+    luffy.attack_flag = False
+    luffy.is_hit = False
+    luffy.current_time = get_time()
+    luffy.frame = 0
+
+  @staticmethod
+  def exit(luffy, e):
+    luffy.frame = 0
+    luffy.w = 100
+    luffy.h = 100
+    luffy.y = 114
+
+  @staticmethod
+  def do(luffy):
+    luffy.frame += (FRAMES_PER_ACTION_GEAR*ACTION_PER_TIME*game_framework.frame_time)
+    if luffy.frame >= 12:
+      luffy.w = 180
+      luffy.h = 130
+      luffy.y = 124
+    if luffy.frame >= 18:
+      luffy.state_machine.add_event(('COMPLETE', 0))
+
+  @staticmethod
+  def draw(luffy):
+    if luffy.face_dir == 1:
+      luffy.image_gear.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                      luffy.x, luffy.y, luffy.w, luffy.h)
+    else:
+      luffy.image_gear.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                      luffy.x, luffy.y, luffy.w, luffy.h)

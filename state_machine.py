@@ -48,6 +48,10 @@ def reach_to_player(e):
 
 def win(e):
   return e[0] == 'WIN'
+def gear(e):
+  return e[0] == 'GEAR'
+def complete_transition(e):
+  return e[0] == 'COMPLETE'
 
 
 class StateMachine:

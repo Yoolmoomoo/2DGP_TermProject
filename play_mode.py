@@ -72,9 +72,9 @@ def draw():
   global load_flag, start_time
   clear_canvas()
   game_world.render()
-  if load_flag == False:
-    game_framework.push_mode(loading_mode)
-    load_flag = True
+  # if load_flag == False:
+  #   game_framework.push_mode(loading_mode)
+  #   load_flag = True
 
   update_canvas()
 
