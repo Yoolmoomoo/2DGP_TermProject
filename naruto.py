@@ -19,7 +19,7 @@ class Naruto:
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-115, self.hp)
-    self.damage = 0.3
+    self.damage = 1.0
     self.action = 1
     self.face_dir = -1
     self.combo_flag = False
@@ -79,14 +79,18 @@ class Naruto:
     if self.state == 'Attack1':
       # self.last_att1_time = get_time()
       self.attack_flag = True
-      if self.tx > self.x:
+      if play_mode.luffy.x > self.x:
         self.face_dir = 1
-        if self.frame >= 3:
+        if self.frame >= 2:
           self.hit_x, self.hit_y = self.x+30, self.y-40
+        if self.frame >= 2.1:
+          self.hit_x, self.hit_y = 0,0
       else:
         self.face_dir = -1
-        if self.frame >= 3:
+        if self.frame >= 2:
           self.hit_x, self.hit_y = self.x-30, self.y-40
+        if self.frame >= 2.1:
+          self.hit_x, self.hit_y = 0, 0
 
       self.frame += FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time
       if self.frame >= 4:
@@ -217,6 +221,7 @@ class Naruto:
 
   def handle_collision(self, group, other):
     if group == 'luffy:naruto' and other.attack_flag == True:
+      if self.state == 'Lose': return
       self.hit_sound.play()
       self.attack_flag = False
       self.hp -= other.damage

@@ -11,6 +11,7 @@ class Map:
         self.bgm = load_music('./res/sound/battle.mp3')
         self.bgm.set_volume(32)
         self.bgm.repeat_play()
+        self.state = 'None'
 
     def update(self):
         if play_mode.win_flag == 1:
@@ -22,7 +23,7 @@ class Map:
         pass
 
     def draw(self):
-        self.image.draw(600, 400)
+        self.image.draw(500, 350)
         self.luffy_coma.draw(get_canvas_width()/2-45, get_canvas_height()-60, 80, 80)
         self.naruto_coma.draw(get_canvas_width()/2+45, get_canvas_height()-60, 80, 80)
         # self.image.draw(1200, 30)

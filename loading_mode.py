@@ -27,10 +27,7 @@ def handle_events():
       game_framework.quit()
     elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
       game_framework.quit()
-    elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
-      delay(0.5)
-      close_canvas()
-      game_framework.change_mode(play_mode)
+
 
 def draw():
   clear_canvas()

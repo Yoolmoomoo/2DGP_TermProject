@@ -152,7 +152,7 @@ class Action(Node):
 
     @Node.show_result
     def run(self):
-        if get_time() - play_mode.start_time < 3.0:
+        if get_time() - play_mode.start_time < 2.5:
             return -1
         self.value = self.func(*self.args)
         return self.value

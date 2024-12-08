@@ -10,7 +10,7 @@ import play_mode
 
 class Luffy:
   def __init__(self):
-    self.gear_flag = True
+    self.gear_flag = False
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
     self.w = 100
@@ -18,7 +18,7 @@ class Luffy:
     self.font = load_font('./res/font/D2Coding.TTF', 20)
     self.hp = 400
     self.hp_bar = Hp(self.x-387, self.hp)
-    self.damage = 0.3
+    self.damage = 0.5
     self.state_flag = 'Idle'
     self.action = 1
     self.face_dir = 1
@@ -45,8 +45,13 @@ class Luffy:
     self.image_gear_combo_attack1 = load_image('./res/luffy/luffy_gear_combo_attack1.png')
     self.image_gear_combo_attack2 = load_image('./res/luffy/luffy_gear_combo_attack2.png')
     self.image_gear_combo_attack3 = load_image('./res/luffy/luffy_gear_combo_attack3.png')
+    self.image_gear_take_damage = load_image('./res/luffy/luffy_gear_take_damage.png')
+    self.image_gear_jump = load_image('./res/luffy/luffy_gear_jump.png')
+    self.image_gear_win = load_image('./res/luffy/luffy_gear_win.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
     self.hit_sound.set_volume(32)
+    self.gear_sound = load_wav('./res/sound/gear_sound.wav')
+    self.gear_sound.set_volume(80)
     self.is_hit = False
     self.hit_num = 0
     self.state_machine = StateMachine(self)
@@ -104,6 +109,7 @@ class Luffy:
   def update(self):
     self.state_machine.update()
     self.hp_bar.update(self.hp)
+
   def handle_event(self, event):
     if event.type == SDL_KEYDOWN and event.key in [SDLK_RIGHT, SDLK_LEFT]:
       self.key_states[event.key] = True
@@ -115,6 +121,7 @@ class Luffy:
       self.combo_flag = True
     elif self.state_flag == 'Idle' and event.type == SDL_KEYDOWN and event.key is SDLK_g:
       self.state_machine.add_event(('GEAR', 0))
+      self.gear_sound.play()
 
     self.state_machine.add_event(('INPUT', event))
 
@@ -124,8 +131,8 @@ class Luffy:
     self.hp_bar.draw(self.hp, left_flag = True)
     # Collision box
     # draw_rectangle(*self.get_bb())
-    for bb in self.get_bb():
-      draw_rectangle(*bb)
+    # for bb in self.get_bb():
+    #   draw_rectangle(*bb)
 
   def get_bb(self):
     # xld, yld, xru, yru
@@ -174,8 +181,7 @@ class Luffy:
 
   def handle_collision(self, group, other):
     if self.state_flag == 'None': return
-    if group == 'luffy:map':
-      pass
+    if other.hp <= 0 : return
     if group == 'luffy:naruto' and other.attack_flag == True:
       self.state_machine.add_event(('TAKE_DAMAGE', 0))
       self.hp -= other.damage
@@ -260,7 +266,10 @@ class Run:
   def do(luffy):
     # luffy.run_sound.play()
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE * ACTION_PER_TIME * game_framework.frame_time) % 8
-    luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
+    if (luffy.x <= 10 and luffy.dir == -1) or (luffy.x >=1000 and luffy.dir == 1):
+      luffy.x = luffy.x
+    else:
+      luffy.x += luffy.dir * RUN_SPEED_PPS * game_framework.frame_time
 
   @staticmethod
   def draw(luffy):
@@ -404,6 +413,8 @@ class ComboAttack1:
     luffy.attack_time = get_time()
     luffy.hit_num = 1
     luffy.attack_flag = True
+    if luffy.gear_flag == True:
+      luffy.frame = 0
 
   @staticmethod
   def exit(luffy, e):
@@ -415,10 +426,9 @@ class ComboAttack1:
   def do(luffy):
     luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
 
-
       # X키 입력 대기
     if luffy.frame >= 3:  # ComboAttack1 프레임 종료
-      if get_time() - luffy.attack_time < 1.0 and luffy.combo_flag:
+      if get_time() - luffy.attack_time < 0.9 and luffy.combo_flag:
         luffy.state_machine.add_event(('COMBO_NEXT', 0))  # ComboAttack2로 전환
       else:
         luffy.state_machine.add_event(('FRAME_DONE', 0))  # Idle로 전환
@@ -458,13 +468,13 @@ class ComboAttack2:
   def do(luffy):
     if luffy.gear_flag == True:
       luffy.frame += (FRAMES_PER_ACTION_CA * ACTION_PER_TIME * game_framework.frame_time)
-      if luffy.frame > 4:
+      if luffy.frame > 5:
           luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
       if luffy.frame > 6:
         luffy.hit_x, luffy.hit_y = 0,0
       # X키 입력 대기
       if luffy.frame >= 7:  # ComboAttack2 프레임 종료
-        if get_time() - luffy.attack_time < 0.7 and luffy.combo_flag:
+        if get_time() - luffy.attack_time < 0.9 and luffy.combo_flag:
           luffy.state_machine.add_event(('COMBO_NEXT', 0))  # ComboAttack3로 전환
         else:
           luffy.state_machine.add_event(('FRAME_DONE', 0))  # Idle로 전환
@@ -476,7 +486,7 @@ class ComboAttack2:
         luffy.hit_x, luffy.hit_y = 0,0
       # X키 입력 대기
       if luffy.frame >= 8:  # ComboAttack2 프레임 종료
-        if get_time() - luffy.attack_time < 0.7 and luffy.combo_flag:
+        if get_time() - luffy.attack_time < 0.9 and luffy.combo_flag:
           luffy.state_machine.add_event(('COMBO_NEXT', 0))  # ComboAttack3로 전환
         else:
           luffy.state_machine.add_event(('FRAME_DONE', 0))  # Idle로 전환
@@ -486,14 +496,14 @@ class ComboAttack2:
     if luffy.gear_flag == True:
       if luffy.face_dir == 1:
         luffy.image_gear_combo_attack2.clip_composite_draw(int(luffy.frame) * 560, 0, 560, 180, 0, '',
-                                                 luffy.x+13, luffy.y, 450, 100)
+                                                 luffy.x+13, luffy.y, 500, 100)
       else:
         luffy.image_gear_combo_attack2.clip_composite_draw(int(luffy.frame) * 560, 0, 560, 180, 0, 'h',
-                                                 luffy.x-13, luffy.y, 450, 100)
+                                                 luffy.x-13, luffy.y, 480, 100)
     else:
       if luffy.face_dir == 1:
         luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, '',
-                                                 luffy.x-13, luffy.y, 400, 120)
+                                                 luffy.x-13, luffy.y, 480, 120)
       else:
         luffy.image_x_attack.clip_composite_draw(int(luffy.frame) * 240, 0, 240, 180, 0, 'h',
                                                  luffy.x+13, luffy.y, 400, 120)
@@ -522,7 +532,7 @@ class ComboAttack3:
       if luffy.frame >= 7:
         luffy.hit_x, luffy.hit_y = luffy.x + 30, luffy.y - 10
 
-      if luffy.frame >= 8:
+      if luffy.frame >= 7.5:
         luffy.hit_x, luffy.hit_y = 0, 0
 
       # 마지막 콤보 종료 후 Idle로 전환
@@ -595,7 +605,7 @@ class Jump:
     luffy.frame += (FRAMES_PER_ACTION_JUMP * ACTION_PER_TIME * game_framework.frame_time)
     if luffy.frame >= 5: luffy.frame = 5
 
-    if luffy.y >= 270:
+    if luffy.y >= 290:
       luffy.dy = -1
 
     luffy.y += luffy.dy * RUN_SPEED_PPS * game_framework.frame_time*1.2
@@ -607,12 +617,20 @@ class Jump:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                                      luffy.x, luffy.y, 120, 120)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                        luffy.x, luffy.y, 100, 100)
+      else:
+        luffy.image_gear_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                        luffy.x, luffy.y, 100, 100)
     else:
-      luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                                      luffy.x, luffy.y, 120, 120)
+      if luffy.face_dir == 1:
+        luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                        luffy.x, luffy.y, 120, 120)
+      else:
+        luffy.image_jump.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                        luffy.x, luffy.y, 120, 120)
 
 class TakeDamage:
   @staticmethod
@@ -640,16 +658,28 @@ class TakeDamage:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                           luffy.x, luffy.y, 100, 100)
-      luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
-                                                  luffy.x, luffy.y, 50, 50)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                             luffy.x, luffy.y, 100, 100)
+        luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
+                                                    luffy.x, luffy.y, 50, 50)
+      else:
+        luffy.image_gear_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                             luffy.x, luffy.y, 100, 100)
+        luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
+                                                    luffy.x, luffy.y, 50, 50)
     else:
-      luffy.image_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                           luffy.x, luffy.y, 100, 100)
-      luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
-                                                  luffy.x, luffy.y, 50, 50)
+      if luffy.face_dir == 1:
+        luffy.image_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                             luffy.x, luffy.y, 100, 100)
+        luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
+                                                    luffy.x, luffy.y, 50, 50)
+      else:
+        luffy.image_take_damage.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                             luffy.x, luffy.y, 100, 100)
+        luffy.image_hit_effect.clip_composite_draw(int(luffy.frame) * 100, 0, 256, 256, 0, '',
+                                                    luffy.x, luffy.y, 50, 50)
 
 class Win:
   @staticmethod
@@ -665,12 +695,19 @@ class Win:
     pass
   @staticmethod
   def do(luffy):
-    luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
+    if luffy.gear_flag == True:
+      luffy.frame = (luffy.frame + 1 * ACTION_PER_TIME * game_framework.frame_time) % 5
+    else:
+      luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
 
   @staticmethod
   def draw(luffy):
-    luffy.image_win.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                         luffy.x, luffy.y, 100, 100)
+    if luffy.gear_flag == True:
+      luffy.image_gear_win.clip_composite_draw(int(luffy.frame) * 150, 0, 150, 180, 0, '',
+                                           luffy.x, luffy.y+40, 250, 180)
+    else:
+      luffy.image_win.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                           luffy.x, luffy.y, 100, 100)
 
 class Gear:
   @staticmethod

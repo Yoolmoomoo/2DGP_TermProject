@@ -34,7 +34,6 @@ def init():
   game_world.add_object(luffy, 2)
 
   ##### 충돌 페어 등록 #####
-  game_world.add_collision_pair('luffy:map', luffy, map)
   game_world.add_collision_pair('luffy:naruto', luffy, naruto)
 
   start_time = get_time()
@@ -72,9 +71,9 @@ def draw():
   global load_flag, start_time
   clear_canvas()
   game_world.render()
-  # if load_flag == False:
-  #   game_framework.push_mode(loading_mode)
-  #   load_flag = True
+  if load_flag == False:
+    game_framework.push_mode(loading_mode)
+    load_flag = True
 
   update_canvas()
 
