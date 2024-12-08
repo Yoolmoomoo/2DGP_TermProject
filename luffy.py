@@ -37,6 +37,7 @@ class Luffy:
     self.image_win = load_image('./res/luffy/luffy_win.png')
     self.image_hit_effect = load_image('./res/luffy/hit_effect.png')
     self.image_gear = load_image('./res/luffy/luffy_gear.png')
+    self.image_gear_idle = load_image('./res/luffy/luffy_gear_idle.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
     self.hit_sound.set_volume(32)
     self.is_hit = False
@@ -203,12 +204,20 @@ class Idle:
     luffy.frame = (luffy.frame + FRAMES_PER_ACTION_IDLE*ACTION_PER_TIME*game_framework.frame_time) % 4
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_idle.clip_composite_draw(int(luffy.frame)*100, 0, 100, 180,
-                                           0, '', luffy.x, luffy.y, 100, 100)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_idle.clip_composite_draw(int(luffy.frame)*100, 0, 100, 180,
+                                             0, '', luffy.x, luffy.y, 90, 90)
+      else:
+        luffy.image_gear_idle.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                             0, 'h', luffy.x, luffy.y, 90, 90)
     else:
-      luffy.image_idle.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
-                                           0, 'h', luffy.x, luffy.y, 100, 100)
+      if luffy.face_dir == 1:
+        luffy.image_idle.clip_composite_draw(int(luffy.frame)*100, 0, 100, 180,
+                                             0, '', luffy.x, luffy.y, 100, 100)
+      else:
+        luffy.image_idle.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                             0, 'h', luffy.x, luffy.y, 100, 100)
 
 class Run:
   @staticmethod
