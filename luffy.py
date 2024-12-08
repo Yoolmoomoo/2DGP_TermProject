@@ -10,7 +10,7 @@ import play_mode
 
 class Luffy:
   def __init__(self):
-    self.gear_flag = False
+    self.gear_flag = True
     self.x, self.y = 400, 114
     self.hit_x, self.hit_y = 0, 0
     self.w = 100
@@ -39,6 +39,9 @@ class Luffy:
     self.image_gear = load_image('./res/luffy/luffy_gear.png')
     self.image_gear_idle = load_image('./res/luffy/luffy_gear_idle.png')
     self.image_gear_run = load_image('./res/luffy/luffy_gear_run.png')
+    self.image_gear_start_attack = load_image('./res/luffy/luffy_gear_start_attack.png')
+    self.image_gear_main_attack = load_image('./res/luffy/luffy_gear_main_attack.png')
+    self.image_gear_finish_attack = load_image('./res/luffy/luffy_gear_finish_attack.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
     self.hit_sound.set_volume(32)
     self.is_hit = False
@@ -289,12 +292,20 @@ class StartAttack:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_c_attack_start.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                                   luffy.x, luffy.y, 170, 170)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_start_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                     luffy.x, luffy.y+5, 115, 115)
+      else:
+        luffy.image_gear_start_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                       luffy.x, luffy.y+5, 115, 115)
     else:
-      luffy.image_c_attack_start.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+      if luffy.face_dir == 1:
+        luffy.image_c_attack_start.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
                                                      luffy.x, luffy.y, 170, 170)
+      else:
+        luffy.image_c_attack_start.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                       luffy.x, luffy.y, 170, 170)
 
 class MainAttack:
   @staticmethod
@@ -326,12 +337,20 @@ class MainAttack:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                               luffy.x+50, luffy.y+12, 180, 120)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_main_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                 luffy.x+50, luffy.y+20, 160, 130)
+      else:
+        luffy.image_gear_main_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                 luffy.x-50, luffy.y+20, 160, 130)
     else:
-      luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                               luffy.x-50, luffy.y+12, 180, 120)
+      if luffy.face_dir == 1:
+        luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                 luffy.x+50, luffy.y+12, 180, 120)
+      else:
+        luffy.image_c_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                 luffy.x-50, luffy.y+12, 180, 120)
 
 class FinishAttack:
   @staticmethod
@@ -353,12 +372,20 @@ class FinishAttack:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_c_attack_finish.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
-                                                      luffy.x, luffy.y, 150, 150)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_finish_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                        luffy.x, luffy.y, 100, 100)
+      else:
+        luffy.image_gear_finish_attack.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                        luffy.x, luffy.y, 100, 100)
     else:
-      luffy.image_c_attack_finish.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
-                                                      luffy.x, luffy.y, 150, 150)
+      if luffy.face_dir == 1:
+        luffy.image_c_attack_finish.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, '',
+                                                        luffy.x, luffy.y, 150, 150)
+      else:
+        luffy.image_c_attack_finish.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180, 0, 'h',
+                                                        luffy.x, luffy.y, 150, 150)
 
 class ComboAttack1:
   @staticmethod
