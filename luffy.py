@@ -38,6 +38,7 @@ class Luffy:
     self.image_hit_effect = load_image('./res/luffy/hit_effect.png')
     self.image_gear = load_image('./res/luffy/luffy_gear.png')
     self.image_gear_idle = load_image('./res/luffy/luffy_gear_idle.png')
+    self.image_gear_run = load_image('./res/luffy/luffy_gear_run.png')
     self.hit_sound = load_wav('./res/sound/hit.wav')
     self.hit_sound.set_volume(32)
     self.is_hit = False
@@ -251,12 +252,21 @@ class Run:
 
   @staticmethod
   def draw(luffy):
-    if luffy.face_dir == 1:
-      luffy.image_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
-                                           0, '', luffy.x, luffy.y, 120, 120)
+    if luffy.gear_flag == True:
+      if luffy.face_dir == 1:
+        luffy.image_gear_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                             0, '', luffy.x, luffy.y, 100, 90)
+      else:
+        luffy.image_gear_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                            0, 'h', luffy.x, luffy.y, 100, 90)
+
     else:
-      luffy.image_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
-                                          0, 'h', luffy.x, luffy.y, 120, 120)
+      if luffy.face_dir == 1:
+        luffy.image_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                             0, '', luffy.x, luffy.y, 120, 120)
+      else:
+        luffy.image_run.clip_composite_draw(int(luffy.frame) * 100, 0, 100, 180,
+                                            0, 'h', luffy.x, luffy.y, 120, 120)
 
 class StartAttack:
   @staticmethod
